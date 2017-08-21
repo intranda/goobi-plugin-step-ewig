@@ -38,6 +38,7 @@ import ugh.exceptions.PreferencesException;
 import ugh.exceptions.ReadException;
 import ugh.exceptions.TypeNotAllowedForParentException;
 import ugh.exceptions.WriteException;
+import de.sub.goobi.config.ConfigPlugins;
 import de.sub.goobi.config.ConfigurationHelper;
 import de.sub.goobi.export.download.ExportMets;
 import de.sub.goobi.helper.Helper;
@@ -79,6 +80,8 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
     public boolean startExport(Process process) throws IOException, InterruptedException, DocStructHasNoTypeException, PreferencesException,
             WriteException, MetadataTypeNotAllowedException, ExportFileException, UghHelperException, ReadException, SwapException, DAOException,
             TypeNotAllowedForParentException {
+        exportFolder = ConfigPlugins.getPluginConfig(this).getString("exportFolder", exportFolder);
+
         return startExport(process, exportFolder);
     }
 
@@ -267,7 +270,6 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
                     file.setAttribute("CHECKSUM", hashes.get(filename.getFileName().toString()));
                     file.setAttribute("CHECKSUMTYPE", "SHA-256");
 
-                    
                 }
             }
         }
