@@ -89,7 +89,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
     public boolean startExport(Process process, String destination) throws IOException, InterruptedException, DocStructHasNoTypeException,
             PreferencesException, WriteException, MetadataTypeNotAllowedException, ExportFileException, UghHelperException, ReadException,
             SwapException, DAOException, TypeNotAllowedForParentException {
-
+        destination = ConfigPlugins.getPluginConfig(this).getString("exportFolder", destination);
         this.myPrefs = process.getRegelsatz().getPreferences();
         //        ConfigProjects cp = new ConfigProjects(process.getProjekt().getTitel());
         String atsPpnBand = process.getTitel();
@@ -193,7 +193,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
             imageDownload(process.getImagesTifDirectory(true), process, benutzerHome, atsPpnBand, "_tif");
             imageDownload(process.getImagesOrigDirectory(false), process, benutzerHome, "master_" + atsPpnBand, "");
 
-            fulltextDownload(process, benutzerHome, atsPpnBand, "_tif");
+            fulltextDownload(process, benutzerHome, atsPpnBand);
 
             String ed = process.getExportDirectory();
             ed = replacer.replace(ed);
@@ -334,7 +334,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
         }
     }
 
-    public void fulltextDownload(Process process, Path benutzerHome, String atsPpnBand, final String ordnerEndung) throws IOException,
+    public void fulltextDownload(Process process, Path benutzerHome, String atsPpnBand) throws IOException,
             InterruptedException, SwapException, DAOException {
 
         // download sources
