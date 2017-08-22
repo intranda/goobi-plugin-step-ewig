@@ -391,7 +391,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
             }
 
             /* jetzt den eigentlichen Kopiervorgang */
-            List<Path> files = NIOFileUtils.listFiles(process.getImagesTifDirectory(true), NIOFileUtils.DATA_FILTER);
+            List<Path> files = NIOFileUtils.listFiles(tifOrdner.toString(), NIOFileUtils.DATA_FILTER);
             for (Path file : files) {
                 Path target = Paths.get(zielTif.toString(), file.getFileName().toString());
                 Files.copy(file, target, NIOFileUtils.STANDARD_COPY_OPTIONS);
