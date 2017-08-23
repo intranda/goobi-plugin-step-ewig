@@ -58,7 +58,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 
     private static final Logger logger = Logger.getLogger(JmbExportPlugin.class);
 
-    private String exportFolder = "/opt/digiverso/viewer/hotfolder/";
+    private String exportFolder = "/opt/digiverso/lza/";
     private static final Namespace metsNamespace = Namespace.getNamespace("mets", "http://www.loc.gov/METS/");
     private static final Namespace xlink = Namespace.getNamespace("xlink", "http://www.w3.org/1999/xlink");
 
