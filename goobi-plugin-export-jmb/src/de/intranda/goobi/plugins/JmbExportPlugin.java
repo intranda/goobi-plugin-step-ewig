@@ -132,62 +132,41 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
         /*
          * -------------------------------- Speicherort vorbereiten und downloaden --------------------------------
          */
-        String zielVerzeichnis;
-        Path benutzerHome;
-        if (process.getProjekt().isUseDmsImport()) {
-            zielVerzeichnis = process.getProjekt().getDmsImportImagesPath();
-            zielVerzeichnis = replacer.replace(zielVerzeichnis);
-            benutzerHome = Paths.get(zielVerzeichnis);
+        Path benutzerHome = Paths.get(destination);
 
-            /* ggf. noch einen Vorgangsordner anlegen */
-            if (process.getProjekt().isDmsImportCreateProcessFolder()) {
-                benutzerHome = Paths.get(benutzerHome.toString(), process.getTitel());
-                zielVerzeichnis = benutzerHome.toString();
-                /* alte Import-Ordner löschen */
-                if (!NIOFileUtils.deleteDir(benutzerHome)) {
-                    Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Import folder could not be cleared");
-                    problems.add("Export cancelled: Import folder could not be cleared.");
-                    return false;
-                }
-                /* alte Success-Ordner löschen */
-                String successPath = process.getProjekt().getDmsImportSuccessPath();
-                successPath = replacer.replace(successPath);
-                Path successFile = Paths.get(successPath, process.getTitel());
-                if (!NIOFileUtils.deleteDir(successFile)) {
-                    Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Success folder could not be cleared");
-                    problems.add("Export cancelled: Success folder could not be cleared.");
-                    return false;
-                }
-                /* alte Error-Ordner löschen */
-                String importPath = process.getProjekt().getDmsImportErrorPath();
-                importPath = replacer.replace(importPath);
-                Path errorfile = Paths.get(importPath, process.getTitel());
-                if (!NIOFileUtils.deleteDir(errorfile)) {
-                    Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Error folder could not be cleared");
-                    problems.add("Export cancelled: Error folder could not be cleared.");
-                    return false;
-                }
-
-                if (!Files.exists(benutzerHome)) {
-                    Files.createDirectories(benutzerHome);
-                }
-            }
-
-        } else {
-            zielVerzeichnis = destination + atsPpnBand;
-            zielVerzeichnis = replacer.replace(zielVerzeichnis);
-            // wenn das Home existiert, erst löschen und dann neu anlegen
-            benutzerHome = Paths.get(zielVerzeichnis);
+        /* ggf. noch einen Vorgangsordner anlegen */
+        if (process.getProjekt().isDmsImportCreateProcessFolder()) {
+            benutzerHome = Paths.get(benutzerHome.toString(), process.getTitel());
+            /* alte Import-Ordner löschen */
             if (!NIOFileUtils.deleteDir(benutzerHome)) {
-                Helper.setFehlerMeldung("Export canceled: " + process.getTitel(), "Could not delete home directory");
-                problems.add("Export cancelled: Could not delete home directory.");
+                Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Import folder could not be cleared");
+                problems.add("Export cancelled: Import folder could not be cleared.");
                 return false;
             }
-            prepareUserDirectory(zielVerzeichnis);
+            /* alte Success-Ordner löschen */
+            String successPath = process.getProjekt().getDmsImportSuccessPath();
+            successPath = replacer.replace(successPath);
+            Path successFile = Paths.get(successPath, process.getTitel());
+            if (!NIOFileUtils.deleteDir(successFile)) {
+                Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Success folder could not be cleared");
+                problems.add("Export cancelled: Success folder could not be cleared.");
+                return false;
+            }
+            /* alte Error-Ordner löschen */
+            String importPath = process.getProjekt().getDmsImportErrorPath();
+            importPath = replacer.replace(importPath);
+            Path errorfile = Paths.get(importPath, process.getTitel());
+            if (!NIOFileUtils.deleteDir(errorfile)) {
+                Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Error folder could not be cleared");
+                problems.add("Export cancelled: Error folder could not be cleared.");
+                return false;
+            }
+
+            if (!Files.exists(benutzerHome)) {
+                Files.createDirectories(benutzerHome);
+            }
         }
-        /*
-         * -------------------------------- der eigentliche Download der Images --------------------------------
-         */
+
         try {
 
             imageDownload(process.getImagesTifDirectory(true), process, benutzerHome, atsPpnBand, "_tif");
@@ -334,8 +313,8 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
         }
     }
 
-    public void fulltextDownload(Process process, Path benutzerHome, String atsPpnBand) throws IOException,
-            InterruptedException, SwapException, DAOException {
+    public void fulltextDownload(Process process, Path benutzerHome, String atsPpnBand) throws IOException, InterruptedException, SwapException,
+            DAOException {
 
         // download sources
         Path sources = Paths.get(process.getSourceDirectory());
