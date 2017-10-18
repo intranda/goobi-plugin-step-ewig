@@ -237,9 +237,11 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
                 case "MASTER":
                     hashes = getChecksums(validationFolder, process.getImagesOrigDirectory(false));
                     break;
-                case "FULLTEXT":
+                case "ALTO":
                     hashes = getChecksums(validationFolder, process.getAltoDirectory());
                     break;
+                default:
+                    hashes = new HashMap<>();
             }
             if (!hashes.isEmpty()) {
                 List<Element> filesInGrp = fileGrp.getChildren("file", metsNamespace);
