@@ -81,7 +81,8 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
     public boolean startExport(Process process) throws IOException, InterruptedException, DocStructHasNoTypeException, PreferencesException,
             WriteException, MetadataTypeNotAllowedException, ExportFileException, UghHelperException, ReadException, SwapException, DAOException,
             TypeNotAllowedForParentException {
-        exportFolder = ConfigPlugins.getPluginConfig(this).getString("exportFolder", exportFolder);
+    	exportFolder = ConfigPlugins.getPluginConfig(this.getTitle()).getString("exportFolder", exportFolder);
+//        exportFolder = ConfigPlugins.getPluginConfig(this).getString("exportFolder", exportFolder);
 
         return startExport(process, exportFolder);
     }
@@ -90,7 +91,8 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
     public boolean startExport(Process process, String destination) throws IOException, InterruptedException, DocStructHasNoTypeException,
             PreferencesException, WriteException, MetadataTypeNotAllowedException, ExportFileException, UghHelperException, ReadException,
             SwapException, DAOException, TypeNotAllowedForParentException {
-        destination = ConfigPlugins.getPluginConfig(this).getString("exportFolder", destination);
+    	destination = ConfigPlugins.getPluginConfig(this.getTitle()).getString("exportFolder", destination);
+//        destination = ConfigPlugins.getPluginConfig(this).getString("exportFolder", destination);
         this.myPrefs = process.getRegelsatz().getPreferences();
         //        ConfigProjects cp = new ConfigProjects(process.getProjekt().getTitel());
         String atsPpnBand = process.getTitel();
