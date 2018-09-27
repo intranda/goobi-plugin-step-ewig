@@ -43,6 +43,7 @@ import de.sub.goobi.config.ConfigurationHelper;
 import de.sub.goobi.export.download.ExportMets;
 import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.NIOFileUtils;
+import de.sub.goobi.helper.StorageProvider;
 import de.sub.goobi.helper.VariableReplacer;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.ExportFileException;
@@ -138,29 +139,32 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
         if (process.getProjekt().isDmsImportCreateProcessFolder()) {
             benutzerHome = Paths.get(benutzerHome.toString(), process.getTitel());
             /* alte Import-Ordner löschen */
-            if (!NIOFileUtils.deleteDir(benutzerHome)) {
-                Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Import folder could not be cleared");
-                problems.add("Export cancelled: Import folder could not be cleared.");
-                return false;
-            }
+            StorageProvider.getInstance().deleteDir(benutzerHome);
+//            if (!NIOFileUtils.deleteDir(benutzerHome)) {
+//                Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Import folder could not be cleared");
+//                problems.add("Export cancelled: Import folder could not be cleared.");
+//                return false;
+//            }
             /* alte Success-Ordner löschen */
             String successPath = process.getProjekt().getDmsImportSuccessPath();
             successPath = replacer.replace(successPath);
             Path successFile = Paths.get(successPath, process.getTitel());
-            if (!NIOFileUtils.deleteDir(successFile)) {
-                Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Success folder could not be cleared");
-                problems.add("Export cancelled: Success folder could not be cleared.");
-                return false;
-            }
+            StorageProvider.getInstance().deleteDir(successFile);
+//            if (!NIOFileUtils.deleteDir(successFile)) {
+//                Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Success folder could not be cleared");
+//                problems.add("Export cancelled: Success folder could not be cleared.");
+//                return false;
+//            }
             /* alte Error-Ordner löschen */
             String importPath = process.getProjekt().getDmsImportErrorPath();
             importPath = replacer.replace(importPath);
             Path errorfile = Paths.get(importPath, process.getTitel());
-            if (!NIOFileUtils.deleteDir(errorfile)) {
-                Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Error folder could not be cleared");
-                problems.add("Export cancelled: Error folder could not be cleared.");
-                return false;
-            }
+            StorageProvider.getInstance().deleteDir(errorfile);
+//            if (!NIOFileUtils.deleteDir(errorfile)) {
+//                Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Error folder could not be cleared");
+//                problems.add("Export cancelled: Error folder could not be cleared.");
+//                return false;
+//            }
 
             if (!Files.exists(benutzerHome)) {
                 Files.createDirectories(benutzerHome);
@@ -178,17 +182,20 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
             ed = replacer.replace(ed);
             Path exportFolder = Paths.get(ed);
             if (Files.exists(exportFolder) && Files.isDirectory(exportFolder)) {
-                List<Path> subdir = NIOFileUtils.listFiles(ed);
+            	List<Path> subdir =StorageProvider.getInstance().listFiles(ed);
+//                List<Path> subdir = NIOFileUtils.listFiles(ed);
 
                 for (Path dir : subdir) {
-                    if (Files.isDirectory(dir) && !NIOFileUtils.list(dir.toString()).isEmpty()) {
+                	if (Files.isDirectory(dir) && !StorageProvider.getInstance().listFiles(dir.toString()).isEmpty()) {
+//                    if (Files.isDirectory(dir) && !NIOFileUtils.list(dir.toString()).isEmpty()) {
                         if (!dir.getFileName().toString().matches(".+\\.\\d+")) {
                             String suffix = dir.getFileName().toString().substring(dir.getFileName().toString().lastIndexOf("_"));
                             Path d = Paths.get(benutzerHome.toString(), atsPpnBand + suffix);
                             if (!Files.exists(d)) {
                                 Files.createDirectories(d);
                             }
-                            List<Path> files = NIOFileUtils.listFiles(dir.toString());
+                            List<Path> files = StorageProvider.getInstance().listFiles(dir.toString());
+//                            List<Path> files = NIOFileUtils.listFiles(dir.toString());
                             for (Path file : files) {
                                 Path target = Paths.get(destination.toString(), file.getFileName().toString());
                                 Files.copy(file, target, NIOFileUtils.STANDARD_COPY_OPTIONS);
@@ -238,7 +245,8 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
                     hashes = getChecksums(validationFolder, process.getImagesOrigDirectory(false));
                     break;
                 case "ALTO":
-                    hashes = getChecksums(validationFolder, process.getAltoDirectory());
+                	hashes = getChecksums(validationFolder, process.getOcrAltoDirectory());
+//                    hashes = getChecksums(validationFolder, process.getAltoDirectory());
                     break;
                 default:
                     hashes = new HashMap<>();
@@ -320,12 +328,14 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 
         // download sources
         Path sources = Paths.get(process.getSourceDirectory());
-        if (Files.exists(sources) && !NIOFileUtils.list(sources.toString()).isEmpty()) {
+        if (Files.exists(sources) && !StorageProvider.getInstance().list(sources.toString()).isEmpty()) {
+//        if (Files.exists(sources) && !NIOFileUtils.list(sources.toString()).isEmpty()) {
             Path destination = Paths.get(benutzerHome.toString(), atsPpnBand + "_src");
             if (!Files.exists(destination)) {
                 Files.createDirectories(destination);
             }
-            List<Path> dateien = NIOFileUtils.listFiles(process.getSourceDirectory());
+            List<Path> dateien = StorageProvider.getInstance().listFiles(process.getSourceDirectory());
+//            List<Path> dateien = NIOFileUtils.listFiles(process.getSourceDirectory());
             for (Path dir : dateien) {
                 Path meinZiel = Paths.get(destination.toString(), dir.getFileName().toString());
                 Files.copy(dir, meinZiel, NIOFileUtils.STANDARD_COPY_OPTIONS);
@@ -334,15 +344,18 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 
         Path ocr = Paths.get(process.getOcrDirectory());
         if (Files.exists(ocr)) {
-            List<Path> folder = NIOFileUtils.listFiles(process.getOcrDirectory());
+        	List<Path> folder = StorageProvider.getInstance().listFiles(process.getOcrDirectory());
+//            List<Path> folder = NIOFileUtils.listFiles(process.getOcrDirectory());
             for (Path dir : folder) {
-                if (Files.isDirectory(dir) && !NIOFileUtils.list(dir.toString()).isEmpty()) {
+            	if (Files.isDirectory(dir) && !StorageProvider.getInstance().list(dir.toString()).isEmpty()) {
+//                if (Files.isDirectory(dir) && !NIOFileUtils.list(dir.toString()).isEmpty()) {
                     String suffix = dir.getFileName().toString().substring(dir.getFileName().toString().lastIndexOf("_"));
                     Path destination = Paths.get(benutzerHome.toString(), atsPpnBand + suffix);
                     if (!Files.exists(destination)) {
                         Files.createDirectories(destination);
                     }
-                    List<Path> files = NIOFileUtils.listFiles(dir.toString());
+                    List<Path> files = StorageProvider.getInstance().listFiles(dir.toString());
+//                    List<Path> files = NIOFileUtils.listFiles(dir.toString());
                     for (Path file : files) {
                         Path target = Paths.get(destination.toString(), file.getFileName().toString());
                         Files.copy(file, target, NIOFileUtils.STANDARD_COPY_OPTIONS);
@@ -364,7 +377,8 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
          * -------------------------------- jetzt die Ausgangsordner in die Zielordner kopieren --------------------------------
          */
         Path zielTif = Paths.get(benutzerHome.toString(), atsPpnBand + ordnerEndung);
-        if (Files.exists(tifOrdner) && !NIOFileUtils.list(tifOrdner.toString()).isEmpty()) {
+        if (Files.exists(tifOrdner) && !StorageProvider.getInstance().list(tifOrdner.toString()).isEmpty()) {
+//        if (Files.exists(tifOrdner) && !NIOFileUtils.list(tifOrdner.toString()).isEmpty()) {
 
             /* bei Agora-Import einfach den Ordner anlegen */
             if (!Files.exists(zielTif)) {
@@ -372,7 +386,8 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
             }
 
             /* jetzt den eigentlichen Kopiervorgang */
-            List<Path> files = NIOFileUtils.listFiles(tifOrdner.toString(), NIOFileUtils.DATA_FILTER);
+            List<Path> files = StorageProvider.getInstance().listFiles(tifOrdner.toString(), NIOFileUtils.DATA_FILTER);
+//            List<Path> files = NIOFileUtils.listFiles(tifOrdner.toString(), NIOFileUtils.DATA_FILTER);
             for (Path file : files) {
                 Path target = Paths.get(zielTif.toString(), file.getFileName().toString());
                 Files.copy(file, target, NIOFileUtils.STANDARD_COPY_OPTIONS);
@@ -387,8 +402,10 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
                     // check if source files exists
                     if (pfg.getFolder() != null && pfg.getFolder().length() > 0) {
                         Path folder = Paths.get(process.getMethodFromName(pfg.getFolder()));
-                        if (folder != null && Files.exists(folder) && !NIOFileUtils.list(folder.toString()).isEmpty()) {
-                            List<Path> files = NIOFileUtils.listFiles(folder.toString());
+                        if (folder != null && Files.exists(folder) && !StorageProvider.getInstance().list(folder.toString()).isEmpty()) {
+//                        if (folder != null && Files.exists(folder) && !NIOFileUtils.list(folder.toString()).isEmpty()) {
+                        	List<Path> files = StorageProvider.getInstance().listFiles(folder.toString());
+//                            List<Path> files = NIOFileUtils.listFiles(folder.toString());
                             for (Path file : files) {
                                 Path target = Paths.get(zielTif.toString(), file.getFileName().toString());
                                 Files.copy(file, target, NIOFileUtils.STANDARD_COPY_OPTIONS);
