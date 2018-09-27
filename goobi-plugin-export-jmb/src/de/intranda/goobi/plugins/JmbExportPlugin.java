@@ -50,7 +50,7 @@ import de.sub.goobi.helper.exceptions.SwapException;
 import de.sub.goobi.helper.exceptions.UghHelperException;
 import de.sub.goobi.metadaten.MetadatenHelper;
 import de.sub.goobi.metadaten.MetadatenVerifizierung;
-
+ 
 @PluginImplementation
 public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugin {
 
