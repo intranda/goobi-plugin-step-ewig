@@ -15,7 +15,6 @@
 	<property name="dir.javadoc" value="doc" />
 	<property name="pluginFolderWin" value="C:/Goobi/plugins/export/" />
 	<property name="pluginFolderUnix" value="/opt/digiverso/goobi/plugins/export/" />
-	<property name="dir.pmd" value="/opt/pmd" />
 
 
 	<path id="classpath">
@@ -31,14 +30,6 @@
 		<pathelement location="/opt/digiverso/junit/hamcrest-all-1.3.jar" />
 	</path>
 
-	<path id="pmd.classpath">
-		<fileset dir="${dir.pmd}">
-			<include name="*.jar" />
-		</fileset>
-	</path>
-
-	<taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask" classpathref="pmd.classpath">
-	</taskdef>
 
 	
 	<tstamp>
@@ -187,7 +178,7 @@
 	     ================================= -->
 
 	<!-- Run all targets in appropiate order for clean compile-->
-	<target name="dist" depends="javadoc, junit, pmd, jar.runnable" description="Creating everything for Jenkins.">
+	<target name="dist" depends="javadoc, junit,  jar.runnable" description="Creating everything for Jenkins.">
 
 
 	</target>
@@ -241,15 +232,6 @@
 		<echo>intranda... alles ist gut!</echo>
 	</target>
 
-	<target name="pmd">
-		<pmd>
-			<sourceLanguage name="java" version="1.7" />
-			<ruleset>/opt/pmd-bin-5.0.2/conf/intranda_pmd.xml</ruleset>
-			<formatter type="xml" toFile="pmd.xml" />
-			<fileset dir="${dir.src}">
-				<include name="**/*.java" />
-			</fileset>
-		</pmd>
-	</target>
+
 
 </project>
