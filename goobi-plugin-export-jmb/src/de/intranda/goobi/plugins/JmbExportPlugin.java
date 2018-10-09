@@ -87,7 +87,6 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 			PreferencesException, WriteException, MetadataTypeNotAllowedException, ExportFileException,
 			UghHelperException, ReadException, SwapException, DAOException, TypeNotAllowedForParentException {
 		exportFolder = ConfigPlugins.getPluginConfig(this.getTitle()).getString("exportFolder", exportFolder);
-//        exportFolder = ConfigPlugins.getPluginConfig(this).getString("exportFolder", exportFolder);
 
 		return startExport(process, exportFolder);
 	}
@@ -98,9 +97,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 			MetadataTypeNotAllowedException, ExportFileException, UghHelperException, ReadException, SwapException,
 			DAOException, TypeNotAllowedForParentException {
 		destination = ConfigPlugins.getPluginConfig(this.getTitle()).getString("exportFolder", destination);
-//        destination = ConfigPlugins.getPluginConfig(this).getString("exportFolder", destination);
 		this.myPrefs = process.getRegelsatz().getPreferences();
-		// ConfigProjects cp = new ConfigProjects(process.getProjekt().getTitel());
 		String atsPpnBand = process.getTitel();
 
 		/*
@@ -108,7 +105,6 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		 * --------------------------------
 		 */
 		Fileformat gdzfile;
-		// Fileformat newfile;
 		ExportFileformat newfile = MetadatenHelper
 				.getExportFileformatByName(process.getProjekt().getFileFormatDmsExport(), process.getRegelsatz());
 		try {
@@ -152,31 +148,16 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 			benutzerHome = Paths.get(benutzerHome.toString(), process.getTitel());
 			/* alte Import-Ordner löschen */
 			StorageProvider.getInstance().deleteDir(benutzerHome);
-//            if (!NIOFileUtils.deleteDir(benutzerHome)) {
-//                Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Import folder could not be cleared");
-//                problems.add("Export cancelled: Import folder could not be cleared.");
-//                return false;
-//            }
 			/* alte Success-Ordner löschen */
 			String successPath = process.getProjekt().getDmsImportSuccessPath();
 			successPath = replacer.replace(successPath);
 			Path successFile = Paths.get(successPath, process.getTitel());
 			StorageProvider.getInstance().deleteDir(successFile);
-//            if (!NIOFileUtils.deleteDir(successFile)) {
-//                Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Success folder could not be cleared");
-//                problems.add("Export cancelled: Success folder could not be cleared.");
-//                return false;
-//            }
 			/* alte Error-Ordner löschen */
 			String importPath = process.getProjekt().getDmsImportErrorPath();
 			importPath = replacer.replace(importPath);
 			Path errorfile = Paths.get(importPath, process.getTitel());
 			StorageProvider.getInstance().deleteDir(errorfile);
-//            if (!NIOFileUtils.deleteDir(errorfile)) {
-//                Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), "Error folder could not be cleared");
-//                problems.add("Export cancelled: Error folder could not be cleared.");
-//                return false;
-//            }
 
 			if (!Files.exists(benutzerHome)) {
 				Files.createDirectories(benutzerHome);
@@ -195,11 +176,9 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 			Path exportFolder = Paths.get(ed);
 			if (Files.exists(exportFolder) && Files.isDirectory(exportFolder)) {
 				List<Path> subdir = StorageProvider.getInstance().listFiles(ed);
-//                List<Path> subdir = NIOFileUtils.listFiles(ed);
 
 				for (Path dir : subdir) {
 					if (Files.isDirectory(dir) && !StorageProvider.getInstance().listFiles(dir.toString()).isEmpty()) {
-//                    if (Files.isDirectory(dir) && !NIOFileUtils.list(dir.toString()).isEmpty()) {
 						if (!dir.getFileName().toString().matches(".+\\.\\d+")) {
 							String suffix = dir.getFileName().toString()
 									.substring(dir.getFileName().toString().lastIndexOf("_"));
@@ -208,9 +187,8 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 								Files.createDirectories(d);
 							}
 							List<Path> files = StorageProvider.getInstance().listFiles(dir.toString());
-//                            List<Path> files = NIOFileUtils.listFiles(dir.toString());
 							for (Path file : files) {
-								Path target = Paths.get(destination.toString(), file.getFileName().toString());
+								Path target = Paths.get(destination, file.getFileName().toString());
 								Files.copy(file, target, NIOFileUtils.STANDARD_COPY_OPTIONS);
 							}
 						}
@@ -246,36 +224,9 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		}
 		List<Element> fileGroupList = metsDoc.getRootElement().getChild("fileSec", metsNamespace).getChildren("fileGrp",
 				metsNamespace);
-//		String validationFolder = process.getProcessDataDirectory() + "validation"
-//				+ FileSystems.getDefault().getSeparator() + "checksum";
 		for (Element fileGrp : fileGroupList) {
 			String fileGroupName = fileGrp.getAttributeValue("USE");
-//			Map<String, String> hashes = null;
-//			switch (fileGroupName) {
-//			case "MASTER":
-//				hashes = getChecksums(validationFolder, process.getImagesOrigDirectory(false));
-//				break;
-//			case "ALTO":
-//				hashes = getChecksums(validationFolder, process.getOcrAltoDirectory());
-////                    hashes = getChecksums(validationFolder, process.getAltoDirectory());
-//				break;
-//			case "DEFAULT":
-////				hashes = getChecksums(validationFolder, process.getImagesTifDirectory(false));
-//			case "FULLTEXT":
-//				fileGroupList.remove(fileGrp);
-//			default:
-//				hashes = new HashMap<>();
-//			}
-//			if (!hashes.isEmpty()) {
-//				List<Element> filesInGrp = fileGrp.getChildren("file", metsNamespace);
-//				for (Element file : filesInGrp) {
-//					Element flocat = file.getChild("FLocat", metsNamespace);
-//					Path filename = Paths.get(flocat.getAttributeValue("href", xlink));
-//					file.setAttribute("CHECKSUM", hashes.get(filename.getFileName().toString()));
-//					file.setAttribute("CHECKSUMTYPE", "SHA-256");
 
-//				}
-//			}
 			if ("MASTER".equals(fileGroupName) || "ALTO".equals(fileGroupName)) {
 				List<Element> filesInGrp = fileGrp.getChildren("file", metsNamespace);
 				for (Element file : filesInGrp) {
@@ -311,8 +262,6 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 
 		}
 		XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
-		// FileOutputStream output = new
-		// FileOutputStream("/home/robert/workspace/postexport/kleiuniv_PPN517154005.amd.xml");
 		try {
 			FileOutputStream output = new FileOutputStream(metsFilename);
 			outputter.output(metsDoc, output);
@@ -333,39 +282,6 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		return sha256;
 	}
 
-	/**
-	 * looks up and reads file in sub dir of validationFolder containing sha256
-	 * checksums for the files of the process corresponding to folder
-	 * 
-	 * @param validationFolder root folder of system containing the hashfiles
-	 * @param folder           this folders hashes are looked up
-	 * @return hashmap of filenames and hashes of them
-	 */
-//	private Map<String, String> getChecksums(String validationFolder, String folder) {
-//		Path path = Paths.get(folder);
-//		// folder = folder.substring(folder.lastIndexOf(File.separator));
-//		Map<String, String> answer = new HashMap<>();
-//		if (path.getFileName().toString().endsWith("alto")) {
-//			validationFolder = validationFolder + FileSystems.getDefault().getSeparator() + "ocr"
-//					+ FileSystems.getDefault().getSeparator() + path.getFileName().toString() + ".sha256";
-//		} else {
-//			validationFolder = validationFolder + FileSystems.getDefault().getSeparator() + "images"
-//					+ FileSystems.getDefault().getSeparator() + path.getFileName().toString() + ".sha256";
-//		}
-//		try (Stream<String> lines = Files.lines(Paths.get(validationFolder), Charset.defaultCharset())) {
-//			for (String line : (Iterable<String>) lines::iterator) {
-//				if (!line.startsWith("#")) {
-//					String[] parts = line.split("  ");
-//					if (parts.length > 1) {
-//						answer.put(parts[1], parts[0]);
-//					}
-//				}
-//			}
-//		} catch (IOException e) {
-//		}
-//
-//		return answer;
-//	}
 
 	/**
 	 * run through all metadata and children of given docstruct to trim the strings
@@ -395,13 +311,11 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		// download sources
 		Path sources = Paths.get(process.getSourceDirectory());
 		if (Files.exists(sources) && !StorageProvider.getInstance().list(sources.toString()).isEmpty()) {
-//        if (Files.exists(sources) && !NIOFileUtils.list(sources.toString()).isEmpty()) {
 			Path destination = Paths.get(benutzerHome.toString(), atsPpnBand + "_src");
 			if (!Files.exists(destination)) {
 				Files.createDirectories(destination);
 			}
 			List<Path> dateien = StorageProvider.getInstance().listFiles(process.getSourceDirectory());
-//            List<Path> dateien = NIOFileUtils.listFiles(process.getSourceDirectory());
 			for (Path dir : dateien) {
 				Path meinZiel = Paths.get(destination.toString(), dir.getFileName().toString());
 				Files.copy(dir, meinZiel, NIOFileUtils.STANDARD_COPY_OPTIONS);
@@ -411,18 +325,15 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		Path ocr = Paths.get(process.getOcrDirectory());
 		if (Files.exists(ocr)) {
 			List<Path> folder = StorageProvider.getInstance().listFiles(process.getOcrDirectory());
-//            List<Path> folder = NIOFileUtils.listFiles(process.getOcrDirectory());
 			for (Path dir : folder) {
 				if (Files.isDirectory(dir) && !StorageProvider.getInstance().list(dir.toString()).isEmpty()) {
-//                if (Files.isDirectory(dir) && !NIOFileUtils.list(dir.toString()).isEmpty()) {
 					String suffix = dir.getFileName().toString()
-							.substring(dir.getFileName().toString().lastIndexOf("_"));
+							.substring(dir.getFileName().toString().lastIndexOf('_'));
 					Path destination = Paths.get(benutzerHome.toString(), atsPpnBand + suffix);
 					if (!Files.exists(destination)) {
 						Files.createDirectories(destination);
 					}
 					List<Path> files = StorageProvider.getInstance().listFiles(dir.toString());
-//                    List<Path> files = NIOFileUtils.listFiles(dir.toString());
 					for (Path file : files) {
 						Path target = Paths.get(destination.toString(), file.getFileName().toString());
 						Files.copy(file, target, NIOFileUtils.STANDARD_COPY_OPTIONS);
@@ -447,7 +358,6 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		 */
 		Path zielTif = Paths.get(benutzerHome.toString(), atsPpnBand + ordnerEndung);
 		if (Files.exists(tifOrdner) && !StorageProvider.getInstance().list(tifOrdner.toString()).isEmpty()) {
-//        if (Files.exists(tifOrdner) && !NIOFileUtils.list(tifOrdner.toString()).isEmpty()) {
 
 			/* bei Agora-Import einfach den Ordner anlegen */
 			if (!Files.exists(zielTif)) {
@@ -456,7 +366,6 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 
 			/* jetzt den eigentlichen Kopiervorgang */
 			List<Path> files = StorageProvider.getInstance().listFiles(tifOrdner.toString(), NIOFileUtils.DATA_FILTER);
-//            List<Path> files = NIOFileUtils.listFiles(tifOrdner.toString(), NIOFileUtils.DATA_FILTER);
 			for (Path file : files) {
 				Path target = Paths.get(zielTif.toString(), file.getFileName().toString());
 				Files.copy(file, target, NIOFileUtils.STANDARD_COPY_OPTIONS);
@@ -466,16 +375,14 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		if (ConfigurationHelper.getInstance().isExportFilesFromOptionalMetsFileGroups()) {
 
 			List<ProjectFileGroup> myFilegroups = process.getProjekt().getFilegroups();
-			if (myFilegroups != null && myFilegroups.size() > 0) {
+			if (myFilegroups != null && !myFilegroups.isEmpty()) {
 				for (ProjectFileGroup pfg : myFilegroups) {
 					// check if source files exists
 					if (pfg.getFolder() != null && pfg.getFolder().length() > 0) {
 						Path folder = Paths.get(process.getMethodFromName(pfg.getFolder()));
 						if (folder != null && Files.exists(folder)
 								&& !StorageProvider.getInstance().list(folder.toString()).isEmpty()) {
-//                        if (folder != null && Files.exists(folder) && !NIOFileUtils.list(folder.toString()).isEmpty()) {
 							List<Path> files = StorageProvider.getInstance().listFiles(folder.toString());
-//                            List<Path> files = NIOFileUtils.listFiles(folder.toString());
 							for (Path file : files) {
 								Path target = Paths.get(zielTif.toString(), file.getFileName().toString());
 								Files.copy(file, target, NIOFileUtils.STANDARD_COPY_OPTIONS);
@@ -530,7 +437,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		 */
 		DocStruct topElement = dd.getLogicalDocStruct();
 		if (topElement.getType().isAnchor()) {
-			if (topElement.getAllChildren() == null || topElement.getAllChildren().size() == 0) {
+			if (topElement.getAllChildren() == null || topElement.getAllChildren().isEmpty()) {
 				throw new PreferencesException(myProzess.getTitel()
 						+ ": the topstruct element is marked as anchor, but does not have any children for physical docstrucs");
 			} else {
@@ -546,7 +453,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		if (ConfigurationHelper.getInstance().isExportValidateImages()) {
 
 			if (topElement.getAllToReferences("logical_physical") == null
-					|| topElement.getAllToReferences("logical_physical").size() == 0) {
+					|| topElement.getAllToReferences("logical_physical").isEmpty()) {
 				if (dd.getPhysicalDocStruct() != null && dd.getPhysicalDocStruct().getAllChildren() != null) {
 					Helper.setMeldung(myProzess.getTitel()
 							+ ": topstruct element does not have any referenced images yet; temporarily adding them for mets file creation");
@@ -587,7 +494,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		VariableReplacer vp = new VariableReplacer(mm.getDigitalDocument(), this.myPrefs, myProzess, null);
 		List<ProjectFileGroup> myFilegroups = myProzess.getProjekt().getFilegroups();
 
-		if (myFilegroups != null && myFilegroups.size() > 0) {
+		if (myFilegroups != null && !myFilegroups.isEmpty()) {
 			for (ProjectFileGroup pfg : myFilegroups) {
 				// remove Default and Fulltext
 				if (pfg.getName() == "DEFAULT" || pfg.getName() == "FULLTEXT") {
@@ -649,8 +556,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 
 		mm.setGoobiID(String.valueOf(myProzess.getId()));
 
-		// if (!ConfigMain.getParameter("ImagePrefix", "\\d{8}").equals("\\d{8}")) {
-		List<String> images = new ArrayList<String>();
+		List<String> images = new ArrayList<>();
 		if (ConfigurationHelper.getInstance().isExportValidateImages()) {
 			try {
 				// TODO andere Dateigruppen nicht mit image Namen ersetzen
@@ -667,13 +573,10 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 						return false;
 					}
 				}
-			} catch (IndexOutOfBoundsException e) {
+			} catch (IndexOutOfBoundsException | InvalidImagesException e) {
 				logger.error(e);
 				return false;
-			} catch (InvalidImagesException e) {
-				logger.error(e);
-				return false;
-			}
+			} 
 		} else {
 			// create pagination out of virtual file names
 			dd.addAllContentFiles();
