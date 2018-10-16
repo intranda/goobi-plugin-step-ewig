@@ -4,13 +4,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -79,7 +79,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 	}
 
 	public String getDescription() {
-		return PLUGIN_NAME;
+		return getTitle();
 	}
 
 	@Override
@@ -121,7 +121,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		}
 
 		trimAllMetadata(gdzfile.getDigitalDocument().getLogicalDocStruct());
-		VariableReplacer replacer = new VariableReplacer(gdzfile.getDigitalDocument(), this.myPrefs, process, null);
+//		VariableReplacer replacer = new VariableReplacer(gdzfile.getDigitalDocument(), this.myPrefs, process, null);
 
 		/*
 		 * -------------------------------- Metadaten validieren
@@ -143,63 +143,63 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		 */
 		Path benutzerHome = Paths.get(destination);
 
-		/* ggf. noch einen Vorgangsordner anlegen */
-		if (process.getProjekt().isDmsImportCreateProcessFolder()) {
-			benutzerHome = Paths.get(benutzerHome.toString(), process.getTitel());
-			/* alte Import-Ordner löschen */
-			StorageProvider.getInstance().deleteDir(benutzerHome);
-			/* alte Success-Ordner löschen */
-			String successPath = process.getProjekt().getDmsImportSuccessPath();
-			successPath = replacer.replace(successPath);
-			Path successFile = Paths.get(successPath, process.getTitel());
-			StorageProvider.getInstance().deleteDir(successFile);
-			/* alte Error-Ordner löschen */
-			String importPath = process.getProjekt().getDmsImportErrorPath();
-			importPath = replacer.replace(importPath);
-			Path errorfile = Paths.get(importPath, process.getTitel());
-			StorageProvider.getInstance().deleteDir(errorfile);
+//		/* ggf. noch einen Vorgangsordner anlegen */
+//		if (process.getProjekt().isDmsImportCreateProcessFolder()) {
+//			benutzerHome = Paths.get(benutzerHome.toString(), process.getTitel());
+//			/* alte Import-Ordner löschen */
+//			StorageProvider.getInstance().deleteDir(benutzerHome);
+//			/* alte Success-Ordner löschen */
+//			String successPath = process.getProjekt().getDmsImportSuccessPath();
+//			successPath = replacer.replace(successPath);
+//			Path successFile = Paths.get(successPath, process.getTitel());
+//			StorageProvider.getInstance().deleteDir(successFile);
+//			/* alte Error-Ordner löschen */
+//			String importPath = process.getProjekt().getDmsImportErrorPath();
+//			importPath = replacer.replace(importPath);
+//			Path errorfile = Paths.get(importPath, process.getTitel());
+//			StorageProvider.getInstance().deleteDir(errorfile);
+//
+//			if (!Files.exists(benutzerHome)) {
+//				Files.createDirectories(benutzerHome);
+//			}
+//		}
 
-			if (!Files.exists(benutzerHome)) {
-				Files.createDirectories(benutzerHome);
-			}
-		}
-
-		try {
-
-			imageDownload(process.getImagesTifDirectory(true), process, benutzerHome, atsPpnBand, "_tif");
-			imageDownload(process.getImagesOrigDirectory(false), process, benutzerHome, "master_" + atsPpnBand, "");
-
-			fulltextDownload(process, benutzerHome, atsPpnBand);
-
-			String ed = process.getExportDirectory();
-			ed = replacer.replace(ed);
-			Path exportFolder = Paths.get(ed);
-			if (Files.exists(exportFolder) && Files.isDirectory(exportFolder)) {
-				List<Path> subdir = StorageProvider.getInstance().listFiles(ed);
-
-				for (Path dir : subdir) {
-					if (Files.isDirectory(dir) && !StorageProvider.getInstance().listFiles(dir.toString()).isEmpty()) {
-						if (!dir.getFileName().toString().matches(".+\\.\\d+")) {
-							String suffix = dir.getFileName().toString()
-									.substring(dir.getFileName().toString().lastIndexOf("_"));
-							Path d = Paths.get(benutzerHome.toString(), atsPpnBand + suffix);
-							if (!Files.exists(d)) {
-								Files.createDirectories(d);
-							}
-							List<Path> files = StorageProvider.getInstance().listFiles(dir.toString());
-							for (Path file : files) {
-								Path target = Paths.get(destination, file.getFileName().toString());
-								Files.copy(file, target, NIOFileUtils.STANDARD_COPY_OPTIONS);
-							}
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), e);
-			problems.add("Export cancelled: " + e.getMessage());
-			return false;
-		}
+//		try {
+//
+//			imageDownload(process.getImagesTifDirectory(true), process, benutzerHome, atsPpnBand, "_tif");
+//			imageDownload(process.getImagesOrigDirectory(false), process, benutzerHome, "master_" + atsPpnBand, "");
+//
+//			fulltextDownload(process, benutzerHome, atsPpnBand);
+//
+//			String ed = process.getExportDirectory();
+//			ed = replacer.replace(ed);
+//			Path exportFolder = Paths.get(ed);
+//			if (Files.exists(exportFolder) && Files.isDirectory(exportFolder)) {
+//				List<Path> subdir = StorageProvider.getInstance().listFiles(ed);
+//
+//				for (Path dir : subdir) {
+//					if (Files.isDirectory(dir) && !StorageProvider.getInstance().listFiles(dir.toString()).isEmpty()
+//							&& !dir.getFileName().toString().matches(".+\\.\\d+")) {
+//						String suffix = dir.getFileName().toString()
+//								.substring(dir.getFileName().toString().lastIndexOf('_'));
+//						Path d = Paths.get(benutzerHome.toString(), atsPpnBand + suffix);
+//						if (!Files.exists(d)) {
+//							Files.createDirectories(d);
+//						}
+//						List<Path> files = StorageProvider.getInstance().listFiles(dir.toString());
+//						for (Path file : files) {
+//							Path target = Paths.get(destination, file.getFileName().toString());
+//							Files.copy(file, target, NIOFileUtils.STANDARD_COPY_OPTIONS);
+//						}
+//
+//					}
+//				}
+//			}
+//		} catch (Exception e) {
+//			Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), e);
+//			problems.add("Export cancelled: " + e.getMessage());
+//			return false;
+//		}
 
 		/*
 		 * -------------------------------- zum Schluss Datei an gewünschten Ort
@@ -207,7 +207,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		 * anschliessend den Import-Thread starten --------------------------------
 		 */
 
-		String metsFilename = benutzerHome.toString() + "/" + atsPpnBand + ".xml";
+		String metsFilename = benutzerHome.toString() + FileSystems.getDefault().getSeparator() + atsPpnBand + ".xml";
 
 		// write mets file
 		writeMetsFile(process, metsFilename, gdzfile, false);
@@ -243,6 +243,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 					try {
 						shamd = MessageDigest.getInstance("Sha-256");
 					} catch (NoSuchAlgorithmException e) {
+						logger.error("Algorithm not supported", e);
 					}
 					try (InputStream is = StorageProvider.getInstance().newInputStream(pathToFile);
 							DigestInputStream dis = new DigestInputStream(is, shamd)) {
@@ -275,13 +276,12 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 
 	private static String getShaString(MessageDigest messageDigest) {
 		BigInteger bigInt = new BigInteger(1, messageDigest.digest());
-		String sha256 = bigInt.toString(16).toLowerCase();
+		StringBuilder sha256 = new StringBuilder(bigInt.toString(16).toLowerCase());
 		while (sha256.length() < 64) {
-			sha256 = "0" + sha256;
+			sha256.insert(0, 0);
 		}
-		return sha256;
+		return sha256.toString();
 	}
-
 
 	/**
 	 * run through all metadata and children of given docstruct to trim the strings
@@ -463,7 +463,6 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 				} else {
 					Helper.setFehlerMeldung(
 							myProzess.getTitel() + ": could not find any referenced images, export aborted");
-					dd = null;
 					return false;
 				}
 			}
@@ -556,7 +555,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 
 		mm.setGoobiID(String.valueOf(myProzess.getId()));
 
-		List<String> images = new ArrayList<>();
+		List<String> images;
 		if (ConfigurationHelper.getInstance().isExportValidateImages()) {
 			try {
 				// TODO andere Dateigruppen nicht mit image Namen ersetzen
@@ -576,7 +575,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 			} catch (IndexOutOfBoundsException | InvalidImagesException e) {
 				logger.error(e);
 				return false;
-			} 
+			}
 		} else {
 			// create pagination out of virtual file names
 			dd.addAllContentFiles();
