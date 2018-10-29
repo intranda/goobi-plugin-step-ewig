@@ -60,7 +60,7 @@ import ugh.exceptions.WriteException;
 @PluginImplementation
 public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugin {
 
-	private static final String PLUGIN_NAME = "LzaExport";
+	private static final String PLUGIN_NAME = "LzaExportEWIG";
 
 	private static final Logger logger = Logger.getLogger(JmbExportPlugin.class);
 
@@ -143,7 +143,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		 */
 		Path benutzerHome = Paths.get(destination);
 
-//		/* ggf. noch einen Vorgangsordner anlegen */
+		/* ggf. noch einen Vorgangsordner anlegen */
 //		if (process.getProjekt().isDmsImportCreateProcessFolder()) {
 //			benutzerHome = Paths.get(benutzerHome.toString(), process.getTitel());
 //			/* alte Import-Ordner löschen */
@@ -163,7 +163,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 //				Files.createDirectories(benutzerHome);
 //			}
 //		}
-
+//
 //		try {
 //
 //			imageDownload(process.getImagesTifDirectory(true), process, benutzerHome, atsPpnBand, "_tif");
@@ -496,7 +496,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		if (myFilegroups != null && !myFilegroups.isEmpty()) {
 			for (ProjectFileGroup pfg : myFilegroups) {
 				// remove Default and Fulltext
-				if (pfg.getName() == "DEFAULT" || pfg.getName() == "FULLTEXT") {
+				if (pfg.getName() != "MASTER" && pfg.getName() != "ALTO") {
 					myFilegroups.remove(pfg);
 				} else {
 					// check if source files exists
