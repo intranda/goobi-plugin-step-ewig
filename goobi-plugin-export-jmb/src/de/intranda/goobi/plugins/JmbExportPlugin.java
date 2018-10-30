@@ -1,16 +1,19 @@
 package de.intranda.goobi.plugins;
 
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -226,7 +229,7 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 				metsNamespace);
 		for (Element fileGrp : fileGroupList) {
 			String fileGroupName = fileGrp.getAttributeValue("USE");
-
+			// compute hashes for files in filegroups master and alto
 			if ("MASTER".equals(fileGroupName) || "ALTO".equals(fileGroupName)) {
 				List<Element> filesInGrp = fileGrp.getChildren("file", metsNamespace);
 				for (Element file : filesInGrp) {
@@ -252,6 +255,10 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 						while (n != -1) {
 							n = dis.read(buffer);
 						}
+					} catch (FileNotFoundException | NoSuchFileException e) {
+						Helper.setFehlerMeldung("File not found, hash could not be calculated: "+pathToFile.toString());
+						logger.error("File not found, hash could not be calculated: " + pathToFile.toString());
+						return false;
 					}
 					String hash = getShaString(shamd);
 					file.setAttribute("CHECKSUM", hash);
@@ -494,10 +501,11 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		List<ProjectFileGroup> myFilegroups = myProzess.getProjekt().getFilegroups();
 
 		if (myFilegroups != null && !myFilegroups.isEmpty()) {
+			List<ProjectFileGroup> toRemove = new ArrayList<>();
 			for (ProjectFileGroup pfg : myFilegroups) {
-				// remove Default and Fulltext
-				if (pfg.getName() != "MASTER" && pfg.getName() != "ALTO") {
-					myFilegroups.remove(pfg);
+				if (!"MASTER".equals(pfg.getName()) && !"ALTO".equals(pfg.getName())) {
+					// remove not needed filegroups
+					toRemove.add(pfg);
 				} else {
 					// check if source files exists
 					if (pfg.getFolder() != null && pfg.getFolder().length() > 0) {
@@ -524,6 +532,10 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 						mm.getDigitalDocument().getFileSet().addVirtualFileGroup(v);
 					}
 				}
+
+			}
+			if (!toRemove.isEmpty()) {
+				myFilegroups.removeAll(toRemove);
 			}
 		}
 
