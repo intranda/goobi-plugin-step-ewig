@@ -559,10 +559,16 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 
 		String pointer = myProzess.getProjekt().getMetsPointerPath();
 		pointer = vp.replace(pointer);
+		if (pointer.lastIndexOf("/") != -1) {
+			pointer = pointer.substring(pointer.lastIndexOf("/")+1);
+		}
 		mm.setMptrUrl(pointer);
 
 		String anchor = myProzess.getProjekt().getMetsPointerPathAnchor();
 		pointer = vp.replace(anchor);
+		if (anchor.lastIndexOf("/") != -1) {
+			anchor = anchor.substring(anchor.lastIndexOf("/")+1);
+		}
 		mm.setMptrAnchorUrl(pointer);
 
 		mm.setGoobiID(String.valueOf(myProzess.getId()));
