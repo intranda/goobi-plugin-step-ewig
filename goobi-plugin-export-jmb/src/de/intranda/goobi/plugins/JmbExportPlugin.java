@@ -575,8 +575,8 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 //                }
 //            }
         	
-            mm.setMptrUrl(Paths.get(targetFileName).getFileName().toString());
-            mm.setMptrAnchorUrl(Paths.get(targetFileName.replace(".xml", "_anchor.xml")).getFileName().toString());
+            mm.setMptrAnchorUrl(Paths.get(targetFileName).getFileName().toString());
+            mm.setMptrUrl(Paths.get(targetFileName.replace(".xml", "_anchor.xml")).getFileName().toString());
         }
 		
 
