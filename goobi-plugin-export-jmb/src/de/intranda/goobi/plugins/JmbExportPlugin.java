@@ -561,21 +561,21 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
         DigitalDocument digDoc =  mm.getDigitalDocument();
         DocStruct logical = digDoc.getLogicalDocStruct();
         if (logical.getType().isAnchor()) {
-            for (Metadata md : logical.getAllMetadata()) {
-                if ("CatalogIDDigital".equals(md.getType().getName())) {
-                    pointerToAnchor = md.getValue();
-                    break;
-                }
-            }
-            logical = logical.getAllChildren().get(0);
-            for (Metadata md : logical.getAllMetadata()) {
-                if ("CatalogIDDigital".equals(md.getType().getName())) {
-                    pointerToVolume = md.getValue();
-                    break;
-                }
-            }
-            mm.setMptrUrl(pointerToVolume);
-            mm.setMptrAnchorUrl(pointerToAnchor);
+//            for (Metadata md : logical.getAllMetadata()) {
+//                if ("CatalogIDDigital".equals(md.getType().getName())) {
+//                    pointerToAnchor = md.getValue();
+//                    break;
+//                }
+//            }
+//            logical = logical.getAllChildren().get(0);
+//            for (Metadata md : logical.getAllMetadata()) {
+//                if ("CatalogIDDigital".equals(md.getType().getName())) {
+//                    pointerToVolume = md.getValue();
+//                    break;
+//                }
+//            }
+            mm.setMptrUrl(targetFileName);
+            mm.setMptrAnchorUrl(targetFileName.replace(".xml", "_anchor.xml"));
         }
 		
 
