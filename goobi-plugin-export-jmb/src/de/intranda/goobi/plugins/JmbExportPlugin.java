@@ -556,20 +556,28 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 
 		mm.setPurlUrl(vp.replace(myProzess.getProjekt().getMetsPurl()));
 		mm.setContentIDs(vp.replace(myProzess.getProjekt().getMetsContentIDs()));
-
-		String pointer = myProzess.getProjekt().getMetsPointerPath();
-		pointer = vp.replace(pointer);
-		if (pointer.lastIndexOf("/") != -1) {
-			pointer = pointer.substring(pointer.lastIndexOf("/")+1);
-		}
-		mm.setMptrUrl(pointer);
-
-		String anchor = myProzess.getProjekt().getMetsPointerPathAnchor();
-		pointer = vp.replace(anchor);
-		if (anchor.lastIndexOf("/") != -1) {
-			anchor = anchor.substring(anchor.lastIndexOf("/")+1);
-		}
-		mm.setMptrAnchorUrl(pointer);
+        String pointerToAnchor = null;
+        String pointerToVolume = null;
+        DigitalDocument digDoc =  mm.getDigitalDocument();
+        DocStruct logical = digDoc.getLogicalDocStruct();
+        if (logical.getType().isAnchor()) {
+            for (Metadata md : logical.getAllMetadata()) {
+                if ("CatalogIDDigital".equals(md.getType().getName())) {
+                    pointerToAnchor = md.getValue();
+                    break;
+                }
+            }
+            logical = logical.getAllChildren().get(0);
+            for (Metadata md : logical.getAllMetadata()) {
+                if ("CatalogIDDigital".equals(md.getType().getName())) {
+                    pointerToVolume = md.getValue();
+                    break;
+                }
+            }
+            mm.setMptrUrl(pointerToVolume);
+            mm.setMptrAnchorUrl(pointerToAnchor);
+        }
+		
 
 		mm.setGoobiID(String.valueOf(myProzess.getId()));
 

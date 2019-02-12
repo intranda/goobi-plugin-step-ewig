@@ -7,7 +7,7 @@
 	<!-- ================================= 
 	        properties             
 	     ================================= -->
-	<property name="filename" value="plugin_intranda_export_jmb" />
+	<property name="filename" value="plugin_intranda_export_LZA_EWIG" />
 	<property name="dir.build" value="bin" />
 	<property name="dir.src" value="src" />
 	<property name="dir.test" value="test/src" />
