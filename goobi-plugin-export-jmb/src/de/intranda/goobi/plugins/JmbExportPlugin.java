@@ -124,7 +124,6 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		}
 
 		trimAllMetadata(gdzfile.getDigitalDocument().getLogicalDocStruct());
-//		VariableReplacer replacer = new VariableReplacer(gdzfile.getDigitalDocument(), this.myPrefs, process, null);
 
 		/*
 		 * -------------------------------- Metadaten validieren
@@ -146,63 +145,6 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 		 */
 		Path benutzerHome = Paths.get(destination);
 
-		/* ggf. noch einen Vorgangsordner anlegen */
-//		if (process.getProjekt().isDmsImportCreateProcessFolder()) {
-//			benutzerHome = Paths.get(benutzerHome.toString(), process.getTitel());
-//			/* alte Import-Ordner löschen */
-//			StorageProvider.getInstance().deleteDir(benutzerHome);
-//			/* alte Success-Ordner löschen */
-//			String successPath = process.getProjekt().getDmsImportSuccessPath();
-//			successPath = replacer.replace(successPath);
-//			Path successFile = Paths.get(successPath, process.getTitel());
-//			StorageProvider.getInstance().deleteDir(successFile);
-//			/* alte Error-Ordner löschen */
-//			String importPath = process.getProjekt().getDmsImportErrorPath();
-//			importPath = replacer.replace(importPath);
-//			Path errorfile = Paths.get(importPath, process.getTitel());
-//			StorageProvider.getInstance().deleteDir(errorfile);
-//
-//			if (!Files.exists(benutzerHome)) {
-//				Files.createDirectories(benutzerHome);
-//			}
-//		}
-//
-//		try {
-//
-//			imageDownload(process.getImagesTifDirectory(true), process, benutzerHome, atsPpnBand, "_tif");
-//			imageDownload(process.getImagesOrigDirectory(false), process, benutzerHome, "master_" + atsPpnBand, "");
-//
-//			fulltextDownload(process, benutzerHome, atsPpnBand);
-//
-//			String ed = process.getExportDirectory();
-//			ed = replacer.replace(ed);
-//			Path exportFolder = Paths.get(ed);
-//			if (Files.exists(exportFolder) && Files.isDirectory(exportFolder)) {
-//				List<Path> subdir = StorageProvider.getInstance().listFiles(ed);
-//
-//				for (Path dir : subdir) {
-//					if (Files.isDirectory(dir) && !StorageProvider.getInstance().listFiles(dir.toString()).isEmpty()
-//							&& !dir.getFileName().toString().matches(".+\\.\\d+")) {
-//						String suffix = dir.getFileName().toString()
-//								.substring(dir.getFileName().toString().lastIndexOf('_'));
-//						Path d = Paths.get(benutzerHome.toString(), atsPpnBand + suffix);
-//						if (!Files.exists(d)) {
-//							Files.createDirectories(d);
-//						}
-//						List<Path> files = StorageProvider.getInstance().listFiles(dir.toString());
-//						for (Path file : files) {
-//							Path target = Paths.get(destination, file.getFileName().toString());
-//							Files.copy(file, target, NIOFileUtils.STANDARD_COPY_OPTIONS);
-//						}
-//
-//					}
-//				}
-//			}
-//		} catch (Exception e) {
-//			Helper.setFehlerMeldung("Export canceled, Process: " + process.getTitel(), e);
-//			problems.add("Export cancelled: " + e.getMessage());
-//			return false;
-//		}
 
 		/*
 		 * -------------------------------- zum Schluss Datei an gewünschten Ort
@@ -556,25 +498,9 @@ public class JmbExportPlugin extends ExportMets implements IExportPlugin, IPlugi
 
 		mm.setPurlUrl(vp.replace(myProzess.getProjekt().getMetsPurl()));
 		mm.setContentIDs(vp.replace(myProzess.getProjekt().getMetsContentIDs()));
-        String pointerToAnchor = null;
-        String pointerToVolume = null;
         DigitalDocument digDoc =  mm.getDigitalDocument();
         DocStruct logical = digDoc.getLogicalDocStruct();
         if (logical.getType().isAnchor()) {
-//            for (Metadata md : logical.getAllMetadata()) {
-//                if ("CatalogIDDigital".equals(md.getType().getName())) {
-//                    pointerToAnchor = md.getValue();
-//                    break;
-//                }
-//            }
-//            logical = logical.getAllChildren().get(0);
-//            for (Metadata md : logical.getAllMetadata()) {
-//                if ("CatalogIDDigital".equals(md.getType().getName())) {
-//                    pointerToVolume = md.getValue();
-//                    break;
-//                }
-//            }
-        	
             mm.setMptrAnchorUrl(Paths.get(targetFileName).getFileName().toString());
             mm.setMptrUrl(Paths.get(targetFileName.replace(".xml", "_anchor.xml")).getFileName().toString());
         }
