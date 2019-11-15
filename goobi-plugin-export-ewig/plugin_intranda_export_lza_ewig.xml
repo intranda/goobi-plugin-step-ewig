@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config_plugin>
     <exportFolder>/opt/digiverso/lza/</exportFolder>
+    <exportXmlLog>true</exportXmlLog>
 </config_plugin>

@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.goobi.beans.Process;
 import org.goobi.beans.ProjectFileGroup;
 import org.goobi.production.enums.PluginType;
+import org.goobi.production.export.ExportXmlLog;
 import org.goobi.production.plugin.interfaces.IExportPlugin;
 import org.goobi.production.plugin.interfaces.IPlugin;
 import org.jdom2.Document;
@@ -71,6 +72,8 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
     private static final Namespace metsNamespace = Namespace.getNamespace("mets", "http://www.loc.gov/METS/");
     private static final Namespace xlink = Namespace.getNamespace("xlink", "http://www.w3.org/1999/xlink");
 
+    private boolean exportXmlLog;
+
     @Override
     public PluginType getType() {
         return PluginType.Export;
@@ -86,19 +89,18 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
     }
 
     @Override
-    public boolean startExport(Process process) throws IOException, InterruptedException, DocStructHasNoTypeException,
-    PreferencesException, WriteException, MetadataTypeNotAllowedException, ExportFileException,
-    UghHelperException, ReadException, SwapException, DAOException, TypeNotAllowedForParentException {
+    public boolean startExport(Process process) throws IOException, InterruptedException, DocStructHasNoTypeException, PreferencesException,
+    WriteException, MetadataTypeNotAllowedException, ExportFileException, UghHelperException, ReadException, SwapException, DAOException,
+    TypeNotAllowedForParentException {
         exportFolder = ConfigPlugins.getPluginConfig(this.getTitle()).getString("exportFolder", exportFolder);
-
+        exportXmlLog = ConfigPlugins.getPluginConfig(getTitle()).getBoolean("exportXmlLog", true);
         return startExport(process, exportFolder);
     }
 
     @Override
-    public boolean startExport(Process process, String destination)
-            throws IOException, InterruptedException, DocStructHasNoTypeException, PreferencesException, WriteException,
-            MetadataTypeNotAllowedException, ExportFileException, UghHelperException, ReadException, SwapException,
-            DAOException, TypeNotAllowedForParentException {
+    public boolean startExport(Process process, String destination) throws IOException, InterruptedException, DocStructHasNoTypeException,
+    PreferencesException, WriteException, MetadataTypeNotAllowedException, ExportFileException, UghHelperException, ReadException,
+    SwapException, DAOException, TypeNotAllowedForParentException {
         destination = ConfigPlugins.getPluginConfig(this.getTitle()).getString("exportFolder", destination);
         this.myPrefs = process.getRegelsatz().getPreferences();
         String atsPpnBand = process.getTitel();
@@ -108,8 +110,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
          * --------------------------------
          */
         Fileformat gdzfile;
-        ExportFileformat newfile = MetadatenHelper
-                .getExportFileformatByName(process.getProjekt().getFileFormatDmsExport(), process.getRegelsatz());
+        ExportFileformat newfile = MetadatenHelper.getExportFileformatByName(process.getProjekt().getFileFormatDmsExport(), process.getRegelsatz());
         try {
             gdzfile = process.readMetadataFile();
 
@@ -145,7 +146,6 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
          */
         Path benutzerHome = Paths.get(destination);
 
-
         /*
          * -------------------------------- zum Schluss Datei an gewünschten Ort
          * exportieren entweder direkt in den Import-Ordner oder ins Benutzerhome
@@ -167,8 +167,10 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
             logger.error("error while parsing amd file", e);
             return false;
         }
-        List<Element> fileGroupList = metsDoc.getRootElement().getChild("fileSec", metsNamespace).getChildren("fileGrp",
-                metsNamespace);
+
+        Element fileSec = metsDoc.getRootElement().getChild("fileSec", metsNamespace);
+
+        List<Element> fileGroupList = fileSec.getChildren("fileGrp", metsNamespace);
         for (Element fileGrp : fileGroupList) {
             String fileGroupName = fileGrp.getAttributeValue("USE");
             // compute hashes for files in filegroups master and alto
@@ -198,7 +200,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
                             n = dis.read(buffer);
                         }
                     } catch (FileNotFoundException | NoSuchFileException e) {
-                        Helper.setFehlerMeldung("File not found, hash could not be calculated: "+pathToFile.toString());
+                        Helper.setFehlerMeldung("File not found, hash could not be calculated: " + pathToFile.toString());
                         logger.error("File not found, hash could not be calculated: " + pathToFile.toString());
                         return false;
                     }
@@ -209,7 +211,29 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
                 }
 
             }
+        }
+        if (exportXmlLog) {
+            ExportXmlLog xmlExport = new ExportXmlLog();
+            String logFileName = benutzerHome.toString() + FileSystems.getDefault().getSeparator() + atsPpnBand + "_log.xml";
+            xmlExport.startExport(process, logFileName);
 
+            // add new fileGroup for xml log
+            Element fileGroup = new Element("fileGrp", metsNamespace);
+            fileGroup.setAttribute("USE", "LOG");
+            Element fileElement = new Element("file", metsNamespace);
+            fileElement.setAttribute("ID", "LOGFILE_0001");
+            fileElement.setAttribute("MIMETYPE", "application/xml");
+            fileGroup.addContent(fileElement);
+            Element flocat = new Element("FLocat", metsNamespace);
+            flocat.setAttribute("LOCTYPE", "URL");
+            flocat.setAttribute("href", atsPpnBand + "_log.xml", xlink);
+            fileElement.addContent(flocat);
+            fileSec.addContent(fileGroup);
+
+            Element mainDocstructElement = metsDoc.getRootElement().getChildren("structMap", metsNamespace).get(0).getChild("div", metsNamespace);
+            Element fptr = new Element("fptr", metsNamespace);
+            fptr.setAttribute("FILEID", "LOGFILE_0001");
+            mainDocstructElement.addContent(fptr);
         }
         XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
         try {
@@ -220,6 +244,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
             logger.error("error while writing mets file", e);
             return false;
         }
+
         return true;
     }
 
@@ -233,8 +258,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
     }
 
     /**
-     * run through all metadata and children of given docstruct to trim the strings
-     * calls itself recursively
+     * run through all metadata and children of given docstruct to trim the strings calls itself recursively
      */
     private void trimAllMetadata(DocStruct inStruct) {
         /* trimm all metadata values */
@@ -276,8 +300,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
             List<Path> folder = StorageProvider.getInstance().listFiles(process.getOcrDirectory());
             for (Path dir : folder) {
                 if (Files.isDirectory(dir) && !StorageProvider.getInstance().list(dir.toString()).isEmpty()) {
-                    String suffix = dir.getFileName().toString()
-                            .substring(dir.getFileName().toString().lastIndexOf('_'));
+                    String suffix = dir.getFileName().toString().substring(dir.getFileName().toString().lastIndexOf('_'));
                     Path destination = Paths.get(benutzerHome.toString(), atsPpnBand + suffix);
                     if (!Files.exists(destination)) {
                         Files.createDirectories(destination);
@@ -292,8 +315,8 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
         }
     }
 
-    public void imageDownload(String sourceFolder, Process process, Path benutzerHome, String atsPpnBand,
-            final String ordnerEndung) throws IOException, InterruptedException, SwapException, DAOException {
+    public void imageDownload(String sourceFolder, Process process, Path benutzerHome, String atsPpnBand, final String ordnerEndung)
+            throws IOException, InterruptedException, SwapException, DAOException {
 
         /*
          * -------------------------------- dann den Ausgangspfad ermitteln
@@ -329,8 +352,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
                     // check if source files exists
                     if (pfg.getFolder() != null && pfg.getFolder().length() > 0) {
                         Path folder = Paths.get(process.getMethodFromName(pfg.getFolder()));
-                        if (folder != null && Files.exists(folder)
-                                && !StorageProvider.getInstance().list(folder.toString()).isEmpty()) {
+                        if (folder != null && Files.exists(folder) && !StorageProvider.getInstance().list(folder.toString()).isEmpty()) {
                             List<Path> files = StorageProvider.getInstance().listFiles(folder.toString());
                             for (Path file : files) {
                                 Path target = Paths.get(zielTif.toString(), file.getFileName().toString());
@@ -352,16 +374,14 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
     }
 
     /**
-     * only difference to inherrited method is that this one does not include the
-     * filegroups "DEFAULT" and "FULLTEXT"
+     * only difference to inherrited method is that this one does not include the filegroups "DEFAULT" and "FULLTEXT"
      */
     @Override
-    protected boolean writeMetsFile(Process myProzess, String targetFileName, Fileformat gdzfile,
-            boolean writeLocalFilegroup) throws PreferencesException, WriteException, IOException, InterruptedException,
-    SwapException, DAOException, TypeNotAllowedForParentException {
+    protected boolean writeMetsFile(Process myProzess, String targetFileName, Fileformat gdzfile, boolean writeLocalFilegroup)
+            throws PreferencesException, WriteException, IOException, InterruptedException, SwapException, DAOException,
+            TypeNotAllowedForParentException {
 
-        ExportFileformat mm = MetadatenHelper.getExportFileformatByName(myProzess.getProjekt().getFileFormatDmsExport(),
-                myProzess.getRegelsatz());
+        ExportFileformat mm = MetadatenHelper.getExportFileformatByName(myProzess.getProjekt().getFileFormatDmsExport(), myProzess.getRegelsatz());
         mm.setWriteLocal(writeLocalFilegroup);
         String imageFolderPath = myProzess.getImagesTifDirectory(true);
         Path imageFolder = Paths.get(imageFolderPath);
@@ -373,8 +393,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
         MetadatenImagesHelper mih = new MetadatenImagesHelper(this.myPrefs, dd);
 
         if (dd.getFileSet() == null || dd.getFileSet().getAllFiles().isEmpty()) {
-            Helper.setMeldung(myProzess.getTitel()
-                    + ": digital document does not contain images; temporarily adding them for mets file creation");
+            Helper.setMeldung(myProzess.getTitel() + ": digital document does not contain images; temporarily adding them for mets file creation");
             mih.createPagination(myProzess, null);
         } else {
             mih.checkImageNames(myProzess, imageFolder.getFileName().toString());
@@ -387,8 +406,8 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
         DocStruct topElement = dd.getLogicalDocStruct();
         if (topElement.getType().isAnchor()) {
             if (topElement.getAllChildren() == null || topElement.getAllChildren().isEmpty()) {
-                throw new PreferencesException(myProzess.getTitel()
-                        + ": the topstruct element is marked as anchor, but does not have any children for physical docstrucs");
+                throw new PreferencesException(
+                        myProzess.getTitel() + ": the topstruct element is marked as anchor, but does not have any children for physical docstrucs");
             } else {
                 topElement = topElement.getAllChildren().get(0);
             }
@@ -401,8 +420,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
 
         if (ConfigurationHelper.getInstance().isExportValidateImages()) {
 
-            if (topElement.getAllToReferences("logical_physical") == null
-                    || topElement.getAllToReferences("logical_physical").isEmpty()) {
+            if (topElement.getAllToReferences("logical_physical") == null || topElement.getAllToReferences("logical_physical").isEmpty()) {
                 if (dd.getPhysicalDocStruct() != null && dd.getPhysicalDocStruct().getAllChildren() != null) {
                     Helper.setMeldung(myProzess.getTitel()
                             + ": topstruct element does not have any referenced images yet; temporarily adding them for mets file creation");
@@ -410,8 +428,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
                         topElement.addReferenceTo(mySeitenDocStruct, "logical_physical");
                     }
                 } else {
-                    Helper.setFehlerMeldung(
-                            myProzess.getTitel() + ": could not find any referenced images, export aborted");
+                    Helper.setFehlerMeldung(myProzess.getTitel() + ": could not find any referenced images, export aborted");
                     return false;
                 }
             }
@@ -498,13 +515,12 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
 
         mm.setPurlUrl(vp.replace(myProzess.getProjekt().getMetsPurl()));
         mm.setContentIDs(vp.replace(myProzess.getProjekt().getMetsContentIDs()));
-        DigitalDocument digDoc =  mm.getDigitalDocument();
+        DigitalDocument digDoc = mm.getDigitalDocument();
         DocStruct logical = digDoc.getLogicalDocStruct();
         if (logical.getType().isAnchor()) {
             mm.setMptrAnchorUrl(Paths.get(targetFileName).getFileName().toString());
             mm.setMptrUrl(Paths.get(targetFileName.replace(".xml", "_anchor.xml")).getFileName().toString());
         }
-
 
         mm.setGoobiID(String.valueOf(myProzess.getId()));
 
@@ -542,8 +558,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
 
             Path anchorFile = Paths.get(filename.replace(".xml", "_anchor.xml"));
             if (StorageProvider.getInstance().isFileExists(anchorFile)) {
-                StorageProvider.getInstance().copyFile(anchorFile,
-                        Paths.get(targetFileName.replace(".xml", "_anchor.xml")));
+                StorageProvider.getInstance().copyFile(anchorFile, Paths.get(targetFileName.replace(".xml", "_anchor.xml")));
                 StorageProvider.getInstance().deleteDir(anchorFile);
             }
             StorageProvider.getInstance().deleteDir(tempFile);
