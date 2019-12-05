@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config_plugin>
+    <config>
+        <!-- which projects to use for (can be more then one, otherwise use *) -->
+        <project>*</project>
+        <step>*</step>
+        <exportFolder>/opt/digiverso/lza/</exportFolder>
+        <exportXmlLog>true</exportXmlLog>
+        <createManifest>true</createManifest>
+
+        <manifestParameter name="SubmissionManifestVersion">2.0</manifestParameter>
+        <manifestParameter name="SubmittingOrganization">Example organisation</manifestParameter>
+        <manifestParameter name="OrganizationIdentifier">DE-1</manifestParameter>
+        <manifestParameter name="ContractNumber">1234567</manifestParameter>
+        <manifestParameter name="Contact">Mustermann, Max</manifestParameter>
+        <manifestParameter name="ContactRole">Abteilungsleitung Bibliothek</manifestParameter>
+        <manifestParameter name="ContactEmail">max.mustermann@example.com</manifestParameter>
+        <manifestParameter name="TransferCurator">Doe, John</manifestParameter>
+        <manifestParameter name="TransferCuratorEmail">john.doe@example.com</manifestParameter>
+        <manifestParameter name="SubmissionName">[Abteilungskürzel]_[eindeutiger Name]</manifestParameter>
+        <!-- try to get value from metadata, if this is not possible, use next parameter -->
+        <manifestParameter name="SubmissionDescription">${meta.singleDigCollection};Digitalisierungsprojekt der ZLB</manifestParameter>
+        <manifestParameter name="RightsHolder">${meta.rightsHolder};N/A</manifestParameter>
+        <manifestParameter name="Rights">http://id.loc.gov/vocabulary/preservation/copyrightStatus/pub</manifestParameter>
+        <manifestParameter name="RightsDescription">''</manifestParameter>
+        <manifestParameter name="License">${meta.AccessLicense};${meta.AccessStatus};https://creativecommons.org/publicdomain/mark/1.0/</manifestParameter>
+        <manifestParameter name="AccessRights">${meta.AccessStatus};public</manifestParameter>
+        <manifestParameter name="MetadataFileFormat">http://www.loc.gov/METS/</manifestParameter>
+	    <manifestParameter name="endpoint">https://goobi.irgendwo.zlb.de/api/endpoint/wi</manifestParameter>
+    </config>
+
+</config_plugin>

@@ -2,17 +2,17 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>de.intranda.goobi.plugins.export</groupId>
+	<groupId>de.intranda.goobi.plugins.step</groupId>
 	<artifactId>LZA_EWIG-main</artifactId>
 	<version>1.0.0</version>
 	<properties>
-		<jar.name>plugin_intranda_export_LZA_EWIG</jar.name>
-		<dest.folder>/opt/digiverso/goobi/plugins/export/</dest.folder>
+		<jar.name>plugin_intranda_step_LZA_EWIG</jar.name>
+		<dest.folder>/opt/digiverso/goobi/plugins/step/</dest.folder>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
 	<parent>
-		<groupId>de.intranda.goobi.plugins.export</groupId>
+		<groupId>de.intranda.goobi.plugins.step</groupId>
 		<artifactId>LZA_EWIG</artifactId>
 		<version>1.0.0</version>
 	</parent>

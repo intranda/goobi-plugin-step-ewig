@@ -3,6 +3,6 @@
 		<exec executable="mvn">
 			<arg value="package"/>
 		</exec>
-		<copy file="module-main/target/plugin_intranda_export_LZA_EWIG.jar" todir="/opt/digiverso/goobi/plugins/export/"/>
+		<copy file="module-main/target/plugin_intranda_step_LZA_EWIG.jar" todir="/opt/digiverso/goobi/plugins/step/"/>
 	</target>
 </project>

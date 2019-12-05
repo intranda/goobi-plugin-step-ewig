@@ -14,15 +14,27 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration.SubnodeConfiguration;
+import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
+import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
+import org.apache.commons.lang.StringUtils;
 import org.goobi.beans.Process;
 import org.goobi.beans.ProjectFileGroup;
+import org.goobi.beans.Step;
+import org.goobi.production.GoobiVersion;
+import org.goobi.production.enums.PluginGuiType;
 import org.goobi.production.enums.PluginType;
+import org.goobi.production.enums.StepReturnValue;
 import org.goobi.production.export.ExportXmlLog;
-import org.goobi.production.plugin.interfaces.IExportPlugin;
 import org.goobi.production.plugin.interfaces.IPlugin;
+import org.goobi.production.plugin.interfaces.IStepPlugin;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -53,6 +65,7 @@ import ugh.dl.DocStruct;
 import ugh.dl.ExportFileformat;
 import ugh.dl.Fileformat;
 import ugh.dl.Metadata;
+import ugh.dl.Prefs;
 import ugh.dl.VirtualFileGroup;
 import ugh.exceptions.DocStructHasNoTypeException;
 import ugh.exceptions.MetadataTypeNotAllowedException;
@@ -62,17 +75,22 @@ import ugh.exceptions.TypeNotAllowedForParentException;
 import ugh.exceptions.WriteException;
 
 @PluginImplementation
-public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlugin {
+public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin {
 
-    private static final String PLUGIN_NAME = "intranda_export_lza_ewig";
-
-    private static final Logger logger = Logger.getLogger(EwigExportPlugin.class);
+    private static final String PLUGIN_NAME = "intranda_step_lza_ewig";
 
     private String exportFolder = "/opt/digiverso/lza/";
+
     private static final Namespace metsNamespace = Namespace.getNamespace("mets", "http://www.loc.gov/METS/");
     private static final Namespace xlink = Namespace.getNamespace("xlink", "http://www.w3.org/1999/xlink");
 
+    private Step step;
+    private String returnPath;
+    private Prefs prefs;
+
     private boolean exportXmlLog;
+    private boolean createManifest;
+    private Map<String, List<String>> submissionParameter = new HashMap<>();
 
     @Override
     public PluginType getType() {
@@ -92,8 +110,6 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
     public boolean startExport(Process process) throws IOException, InterruptedException, DocStructHasNoTypeException, PreferencesException,
     WriteException, MetadataTypeNotAllowedException, ExportFileException, UghHelperException, ReadException, SwapException, DAOException,
     TypeNotAllowedForParentException {
-        exportFolder = ConfigPlugins.getPluginConfig(this.getTitle()).getString("exportFolder", exportFolder);
-        exportXmlLog = ConfigPlugins.getPluginConfig(getTitle()).getBoolean("exportXmlLog", true);
         return startExport(process, exportFolder);
     }
 
@@ -102,7 +118,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
     PreferencesException, WriteException, MetadataTypeNotAllowedException, ExportFileException, UghHelperException, ReadException,
     SwapException, DAOException, TypeNotAllowedForParentException {
         destination = ConfigPlugins.getPluginConfig(this.getTitle()).getString("exportFolder", destination);
-        this.myPrefs = process.getRegelsatz().getPreferences();
+        prefs = process.getRegelsatz().getPreferences();
         String atsPpnBand = process.getTitel();
 
         /*
@@ -133,7 +149,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
 
         if (ConfigurationHelper.getInstance().isUseMetadataValidation()) {
             MetadatenVerifizierung mv = new MetadatenVerifizierung();
-            if (!mv.validate(gdzfile, this.myPrefs, process)) {
+            if (!mv.validate(gdzfile, prefs, process)) {
                 problems.add("Export cancelled because of validation errors");
                 problems.addAll(mv.getProblems());
                 return false;
@@ -244,8 +260,70 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
             logger.error("error while writing mets file", e);
             return false;
         }
-
+        String manifestPath = benutzerHome.toString() + FileSystems.getDefault().getSeparator() + "submission-manifest.txt";
+        if (createManifest) {
+            writeSubmissionManifest(manifestPath, gdzfile);
+        }
         return true;
+    }
+
+    private void writeSubmissionManifest(String manifestPath, Fileformat gdzfile) throws PreferencesException {
+        VariableReplacer replacer = new VariableReplacer(gdzfile.getDigitalDocument(), prefs, step.getProzess(), step);
+        StringBuilder manifest = new StringBuilder();
+        createSubmissionManifestLine(replacer, manifest, "SubmissionManifestVersion", "2.0");
+        createSubmissionManifestLine(replacer, manifest, "SubmittingOrganization", "");
+        createSubmissionManifestLine(replacer, manifest, "OrganizationIdentifier", "");
+        createSubmissionManifestLine(replacer, manifest, "ContractNumber", "");
+        createSubmissionManifestLine(replacer, manifest, "Contact", "");
+        createSubmissionManifestLine(replacer, manifest, "ContactRole", "");
+        createSubmissionManifestLine(replacer, manifest, "ContactEmail", "");
+        createSubmissionManifestLine(replacer, manifest, "TransferCurator", "");
+        createSubmissionManifestLine(replacer, manifest, "TransferCuratorEmail", "");
+        createSubmissionManifestLine(replacer, manifest, "SubmissionName", "");
+        createSubmissionManifestLine(replacer, manifest, "SubmissionDescription", "");
+        createSubmissionManifestLine(replacer, manifest, "RightsHolder", "N/A");
+        createSubmissionManifestLine(replacer, manifest, "Rights", "http://id.loc.gov/vocabulary/preservation/copyrightStatus/pub");
+        createSubmissionManifestLine(replacer, manifest, "RightsDescription", "");
+        createSubmissionManifestLine(replacer, manifest, "License", "https://creativecommons.org/publicdomain/mark/1.0/");
+        createSubmissionManifestLine(replacer, manifest, "AccessRights", "public");
+        createSubmissionManifestLine(replacer, manifest, "DataSourceSystem", GoobiVersion.getBuildversion());
+        createSubmissionManifestLine(replacer, manifest, "MetadataFile", step.getProzess().getTitel()+".xml");
+        createSubmissionManifestLine(replacer, manifest, "MetadataFileFormat", "http://www.loc.gov/METS/");
+        createSubmissionManifestLine(replacer, manifest, "CallbackParams", "");
+        createSubmissionManifestLine(replacer, manifest, "  endpoint", submissionParameter.get("endpoint").get(0));
+        createSubmissionManifestLine(replacer, manifest, "  processId", ""+step.getProzess().getId());
+        createSubmissionManifestLine(replacer, manifest, "  stepId", ""+step.getId());
+
+        try {
+            Files.write(Paths.get(manifestPath), manifest.toString().getBytes());
+        } catch (IOException e) {
+            logger.error(e);
+        }
+
+
+    }
+
+    private void createSubmissionManifestLine(VariableReplacer replacer, StringBuilder manifest, String parameter, String defaultValue) {
+        List<String> possibleParameter = submissionParameter.get(parameter); // get configured parameter
+        if (possibleParameter != null) {
+            for (String param : possibleParameter) {
+                if (StringUtils.isNotBlank(param)) {
+                    if (param.contains("${")) {
+                        String newValue = replacer.replace(param);
+                        if (StringUtils.isNotBlank(newValue) && !newValue.equals(param)) {
+                            defaultValue = newValue;
+                            break;
+                        }
+                    } else {
+                        defaultValue = param;
+                    }
+                }
+            }
+        }
+        manifest.append(parameter);
+        manifest.append(": ");
+        manifest.append(defaultValue);
+        manifest.append(System.lineSeparator());
     }
 
     private static String getShaString(MessageDigest messageDigest) {
@@ -365,17 +443,10 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
         }
     }
 
-    @Override
-    public void setExportFulltext(boolean exportFulltext) {
-    }
-
-    @Override
-    public void setExportImages(boolean exportImages) {
-    }
-
     /**
      * only difference to inherrited method is that this one does not include the filegroups "DEFAULT" and "FULLTEXT"
      */
+
     @Override
     protected boolean writeMetsFile(Process myProzess, String targetFileName, Fileformat gdzfile, boolean writeLocalFilegroup)
             throws PreferencesException, WriteException, IOException, InterruptedException, SwapException, DAOException,
@@ -390,7 +461,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
          */
         DigitalDocument dd = gdzfile.getDigitalDocument();
 
-        MetadatenImagesHelper mih = new MetadatenImagesHelper(this.myPrefs, dd);
+        MetadatenImagesHelper mih = new MetadatenImagesHelper(prefs, dd);
 
         if (dd.getFileSet() == null || dd.getFileSet().getAllFiles().isEmpty()) {
             Helper.setMeldung(myProzess.getTitel() + ": digital document does not contain images; temporarily adding them for mets file creation");
@@ -456,7 +527,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
          */
         // Replace all pathes with the given VariableReplacer, also the file
         // group pathes!
-        VariableReplacer vp = new VariableReplacer(mm.getDigitalDocument(), this.myPrefs, myProzess, null);
+        VariableReplacer vp = new VariableReplacer(mm.getDigitalDocument(), prefs, myProzess, null);
         List<ProjectFileGroup> myFilegroups = myProzess.getProjekt().getFilegroups();
 
         if (myFilegroups != null && !myFilegroups.isEmpty()) {
@@ -528,7 +599,7 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
         if (ConfigurationHelper.getInstance().isExportValidateImages()) {
             try {
                 // TODO andere Dateigruppen nicht mit image Namen ersetzen
-                images = new MetadatenImagesHelper(this.myPrefs, dd).getDataFiles(myProzess, imageFolderPath);
+                images = new MetadatenImagesHelper(prefs, dd).getDataFiles(myProzess, imageFolderPath);
 
                 int sizeOfPagination = dd.getPhysicalDocStruct().getAllChildren().size();
                 if (images != null) {
@@ -567,5 +638,93 @@ public class EwigExportPlugin extends ExportMets implements IExportPlugin, IPlug
         }
         Helper.setMeldung(null, myProzess.getTitel() + ": ", "ExportFinished");
         return true;
+    }
+
+    @Override
+    public String cancel() {
+        return null;
+    }
+
+    @Override
+    public boolean execute() {
+        String stepName = step.getTitel();
+        String projectName = step.getProzess().getProjekt().getTitel();
+
+        XMLConfiguration xmlConfig = ConfigPlugins.getPluginConfig(PLUGIN_NAME);
+        xmlConfig.setExpressionEngine(new XPathExpressionEngine());
+        xmlConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
+
+        SubnodeConfiguration myconfig = null;
+
+        // order of configuration is:
+        // 1.) project name and step name matches
+        // 2.) step name matches and project is *
+        // 3.) project name matches and step name is *
+        // 4.) project name and step name are *
+        try {
+            myconfig = xmlConfig.configurationAt("//config[./project = '" + projectName + "'][./step = '" + stepName + "']");
+        } catch (IllegalArgumentException e) {
+            try {
+                myconfig = xmlConfig.configurationAt("//config[./project = '*'][./step = '" + stepName + "']");
+            } catch (IllegalArgumentException e1) {
+                try {
+                    myconfig = xmlConfig.configurationAt("//config[./project = '" + projectName + "'][./step = '*']");
+                } catch (IllegalArgumentException e2) {
+                    myconfig = xmlConfig.configurationAt("//config[./project = '*'][./step = '*']");
+                }
+            }
+        }
+        exportFolder = myconfig.getString("/exportFolder", exportFolder);
+        exportXmlLog = myconfig.getBoolean("/exportXmlLog", true);
+        createManifest = myconfig.getBoolean("/createManifest", false);
+
+        if (createManifest) {
+            List<HierarchicalConfiguration> mfpList = myconfig.configurationsAt("manifestParameter");
+            for (HierarchicalConfiguration hc : mfpList) {
+                String name = hc.getString("@name");
+                String value = hc.getString(".", "");
+                List<String> valueList = Arrays.asList(value.split(";"));
+                submissionParameter.put(name, valueList);
+            }
+        }
+        try {
+            return startExport(step.getProzess());
+        } catch (DocStructHasNoTypeException | PreferencesException | WriteException | MetadataTypeNotAllowedException | ReadException
+                | TypeNotAllowedForParentException | IOException | InterruptedException | ExportFileException | UghHelperException | SwapException
+                | DAOException e) {
+            logger.error(e);
+        }
+        return false;
+    }
+
+    @Override
+    public String finish() {
+        return returnPath;
+    }
+
+    @Override
+    public String getPagePath() {
+        return null;
+    }
+
+    @Override
+    public PluginGuiType getPluginGuiType() {
+        return PluginGuiType.NONE;
+    }
+
+    @Override
+    public Step getStep() {
+        return step;
+    }
+
+    @Override
+    public void initialize(Step step, String returnPath) {
+        this.step = step;
+        this.returnPath = returnPath;
+    }
+
+    @Override
+    public HashMap<String, StepReturnValue> validate() {
+        return null;
     }
 }
