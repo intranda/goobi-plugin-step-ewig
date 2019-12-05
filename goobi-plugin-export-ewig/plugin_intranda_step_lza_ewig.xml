@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config_plugin>
     <config>
-        <!-- which projects to use for (can be more then one, otherwise use *) -->
         <project>*</project>
         <step>*</step>
         <exportFolder>/opt/digiverso/lza/</exportFolder>
@@ -26,7 +25,6 @@
         <manifestParameter name="License">${meta.AccessLicense};${meta.AccessStatus};https://creativecommons.org/publicdomain/mark/1.0/</manifestParameter>
         <manifestParameter name="AccessRights">${meta.AccessStatus};public</manifestParameter>
         <manifestParameter name="MetadataFileFormat">http://www.loc.gov/METS/</manifestParameter>
-	    <manifestParameter name="endpoint">https://goobi.irgendwo.zlb.de/api/endpoint/wi</manifestParameter>
+	    <manifestParameter name="endpoint">https://goobi.example.com/api/endpoint/wi</manifestParameter>
     </config>
-
 </config_plugin>
