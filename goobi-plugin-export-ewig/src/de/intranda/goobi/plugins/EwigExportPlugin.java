@@ -117,7 +117,8 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
     public boolean startExport(Process process, String destination) throws IOException, InterruptedException, DocStructHasNoTypeException,
     PreferencesException, WriteException, MetadataTypeNotAllowedException, ExportFileException, UghHelperException, ReadException,
     SwapException, DAOException, TypeNotAllowedForParentException {
-        destination = ConfigPlugins.getPluginConfig(this.getTitle()).getString("exportFolder", destination);
+        //        destination = ConfigPlugins.getPluginConfig(this.getTitle()).getString("exportFolder", destination);
+        destination = process.getProcessDataDirectory();
         prefs = process.getRegelsatz().getPreferences();
         String atsPpnBand = process.getTitel();
 
