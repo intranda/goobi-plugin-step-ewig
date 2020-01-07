@@ -1,5 +1,6 @@
 package de.intranda.goobi.plugins;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -42,6 +43,9 @@ import org.jdom2.Namespace;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import de.sub.goobi.config.ConfigPlugins;
 import de.sub.goobi.config.ConfigurationHelper;
@@ -243,7 +247,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
             fileGroup.addContent(fileElement);
             Element flocat = new Element("FLocat", metsNamespace);
             flocat.setAttribute("LOCTYPE", "URL");
-            flocat.setAttribute("href", atsPpnBand + "_log.xml", xlink);
+            flocat.setAttribute("href", "submissionDocumentation/" + atsPpnBand + "_log.xml", xlink);
             fileElement.addContent(flocat);
             fileSec.addContent(fileGroup);
 
@@ -251,6 +255,28 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
             Element fptr = new Element("fptr", metsNamespace);
             fptr.setAttribute("FILEID", "LOGFILE_0001");
             mainDocstructElement.addContent(fptr);
+
+            MessageDigest shamd = null;
+            try {
+                shamd = MessageDigest.getInstance("Sha-256");
+            } catch (NoSuchAlgorithmException e) {
+                logger.error("Algorithm not supported", e);
+            }
+            try (InputStream is = StorageProvider.getInstance().newInputStream(Paths.get(logFileName));
+                    DigestInputStream dis = new DigestInputStream(is, shamd)) {
+                int n = 0;
+                byte[] buffer = new byte[8092];
+                while (n != -1) {
+                    n = dis.read(buffer);
+                }
+            } catch (FileNotFoundException | NoSuchFileException e) {
+                Helper.setFehlerMeldung("File not found, hash could not be calculated: " +logFileName);
+                logger.error("File not found, hash could not be calculated: " + logFileName);
+                return false;
+            }
+            String hash = getShaString(shamd);
+            fileElement.setAttribute("CHECKSUM", hash);
+            fileElement.setAttribute("CHECKSUMTYPE", "SHA-256");
         }
         XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
         try {
@@ -270,33 +296,39 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
 
     private void writeSubmissionManifest(String manifestPath, Fileformat gdzfile) throws PreferencesException {
         VariableReplacer replacer = new VariableReplacer(gdzfile.getDigitalDocument(), prefs, step.getProzess(), step);
-        StringBuilder manifest = new StringBuilder();
-        createSubmissionManifestLine(replacer, manifest, "SubmissionManifestVersion", "2.0");
-        createSubmissionManifestLine(replacer, manifest, "SubmittingOrganization", "");
-        createSubmissionManifestLine(replacer, manifest, "OrganizationIdentifier", "");
-        createSubmissionManifestLine(replacer, manifest, "ContractNumber", "");
-        createSubmissionManifestLine(replacer, manifest, "Contact", "");
-        createSubmissionManifestLine(replacer, manifest, "ContactRole", "");
-        createSubmissionManifestLine(replacer, manifest, "ContactEmail", "");
-        createSubmissionManifestLine(replacer, manifest, "TransferCurator", "");
-        createSubmissionManifestLine(replacer, manifest, "TransferCuratorEmail", "");
-        createSubmissionManifestLine(replacer, manifest, "SubmissionName", "");
-        createSubmissionManifestLine(replacer, manifest, "SubmissionDescription", "");
-        createSubmissionManifestLine(replacer, manifest, "RightsHolder", "N/A");
-        createSubmissionManifestLine(replacer, manifest, "Rights", "http://id.loc.gov/vocabulary/preservation/copyrightStatus/pub");
-        createSubmissionManifestLine(replacer, manifest, "RightsDescription", "");
-        createSubmissionManifestLine(replacer, manifest, "License", "https://creativecommons.org/publicdomain/mark/1.0/");
-        createSubmissionManifestLine(replacer, manifest, "AccessRights", "public");
-        createSubmissionManifestLine(replacer, manifest, "DataSourceSystem", GoobiVersion.getBuildversion());
-        createSubmissionManifestLine(replacer, manifest, "MetadataFile", step.getProzess().getTitel()+".xml");
-        createSubmissionManifestLine(replacer, manifest, "MetadataFileFormat", "http://www.loc.gov/METS/");
-        createSubmissionManifestLine(replacer, manifest, "CallbackParams", "");
-        createSubmissionManifestLine(replacer, manifest, "  endpoint", submissionParameter.get("endpoint").get(0));
-        createSubmissionManifestLine(replacer, manifest, "  processId", ""+step.getProzess().getId());
-        createSubmissionManifestLine(replacer, manifest, "  stepId", ""+step.getId());
+        //        StringBuilder manifest = new StringBuilder();
+        SubmissionManifest manifest = new SubmissionManifest();
+        manifest.setSubmissionManifestVersion(getSubmissionManifestValue(replacer,  "SubmissionManifestVersion", "2.0"));
+        manifest.setSubmittingOrganization( getSubmissionManifestValue(replacer,  "SubmittingOrganization", ""));
+        manifest.setOrganizationIdentifier( getSubmissionManifestValue(replacer,  "OrganizationIdentifier", ""));
+        manifest.setContractNumber( getSubmissionManifestValue(replacer,  "ContractNumber", ""));
+        manifest.setContact(getSubmissionManifestValue(replacer,  "Contact", ""));
+        manifest.setContactRole(getSubmissionManifestValue(replacer,  "ContactRole", ""));
+        manifest.setContactEmail(getSubmissionManifestValue(replacer,  "ContactEmail", ""));
+        manifest.setTransferCurator(getSubmissionManifestValue(replacer,  "TransferCurator", ""));
+        manifest.setTransferCuratorEmail(getSubmissionManifestValue(replacer,  "TransferCuratorEmail", ""));
+        manifest.setSubmissionName(getSubmissionManifestValue(replacer,  "SubmissionName", ""));
+        manifest.setSubmissionDescription(getSubmissionManifestValue(replacer,  "SubmissionDescription", ""));
+        manifest.setRightsHolder(getSubmissionManifestValue(replacer,  "RightsHolder", "N/A"));
+        manifest.setRights(getSubmissionManifestValue(replacer,  "Rights", "http://id.loc.gov/vocabulary/preservation/copyrightStatus/pub"));
+        manifest.setRightsDescription(getSubmissionManifestValue(replacer,  "RightsDescription", ""));
+        manifest.setLicense(getSubmissionManifestValue(replacer,  "License", "https://creativecommons.org/publicdomain/mark/1.0/"));
+        manifest.setAccessRights(getSubmissionManifestValue(replacer,  "AccessRights", "public"));
+        manifest.setDataSourceSystem(getSubmissionManifestValue(replacer,  "DataSourceSystem", ConfigurationHelper.getInstance().getApplicationHeaderTitle() + " - " + GoobiVersion.getPublicVersion() + " - " + GoobiVersion.getBuilddate() + " - " + GoobiVersion.getBuildversion()));
+        manifest.setMetadataFile(getSubmissionManifestValue(replacer,  "MetadataFile", step.getProzess().getTitel()+".xml"));
+        manifest.setMetadataFileFormat(getSubmissionManifestValue(replacer,  "MetadataFileFormat", "http://www.loc.gov/METS/"));
+
+        CallbackParams param = new CallbackParams();
+        param.setEndpoint(submissionParameter.get("endpoint").get(0));
+        param.setProcessId(step.getProzess().getId());
+        param.setStepId(step.getId());
+        manifest.setCallbackParams(param);
+
 
         try {
-            Files.write(Paths.get(manifestPath), manifest.toString().getBytes());
+            ObjectMapper om = new ObjectMapper(new YAMLFactory());
+            om.writeValue(new File(manifestPath), manifest);
+            //            Files.write(Paths.get(manifestPath), manifest.toString().getBytes());
         } catch (IOException e) {
             logger.error(e);
         }
@@ -304,7 +336,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
 
     }
 
-    private void createSubmissionManifestLine(VariableReplacer replacer, StringBuilder manifest, String parameter, String defaultValue) {
+    private String getSubmissionManifestValue(VariableReplacer replacer, String parameter, String defaultValue) {
         List<String> possibleParameter = submissionParameter.get(parameter); // get configured parameter
         if (possibleParameter != null) {
             for (String param : possibleParameter) {
@@ -321,10 +353,11 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
                 }
             }
         }
-        manifest.append(parameter);
-        manifest.append(": ");
-        manifest.append(defaultValue);
-        manifest.append(System.lineSeparator());
+        return defaultValue;
+        //        manifest.append(parameter);
+        //        manifest.append(": ");
+        //        manifest.append(defaultValue);
+        //        manifest.append(System.lineSeparator());
     }
 
     private static String getShaString(MessageDigest messageDigest) {
