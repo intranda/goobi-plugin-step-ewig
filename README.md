@@ -13,7 +13,7 @@ More information about the functionality of this plugin and the complete documen
 Detail | Description
 --- | ---
 **Plugin identifier**       | intranda_step_lza_ewig
-**Plugin type**             | Administration plugin
+**Plugin type**             | Step plugin
 **Licence**                 | GPL 2.0 or newer  
 **Documentation (German)**  | https://docs.goobi.io/goobi-workflow-plugins-de/step/intranda_step_lza_ewig
 **Documentation (English)** | https://docs.goobi.io/goobi-workflow-plugins-en/step/intranda_step_lza_ewig
