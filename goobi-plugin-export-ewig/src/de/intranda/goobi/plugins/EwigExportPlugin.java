@@ -61,7 +61,7 @@ import de.sub.goobi.helper.exceptions.UghHelperException;
 import de.sub.goobi.metadaten.MetadatenHelper;
 import de.sub.goobi.metadaten.MetadatenImagesHelper;
 import de.sub.goobi.metadaten.MetadatenVerifizierung;
-import io.goobi.workflow.xslt.XsltPreparatorXmlLog;
+import io.goobi.workflow.xslt.XsltPreparatorMetadata;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 import ugh.dl.ContentFile;
 import ugh.dl.DigitalDocument;
@@ -234,7 +234,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
             }
         }
         if (exportXmlLog) {
-            XsltPreparatorXmlLog xmlExport = new XsltPreparatorXmlLog();
+            XsltPreparatorMetadata xmlExport = new XsltPreparatorMetadata();
             String logFileName = benutzerHome.toString() + FileSystems.getDefault().getSeparator() + atsPpnBand + "_log.xml";
             xmlExport.startExport(process, logFileName);
 
