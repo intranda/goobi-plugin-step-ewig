@@ -62,6 +62,7 @@ import de.sub.goobi.metadaten.MetadatenHelper;
 import de.sub.goobi.metadaten.MetadatenImagesHelper;
 import de.sub.goobi.metadaten.MetadatenVerifizierung;
 import io.goobi.workflow.xslt.XsltPreparatorMetadata;
+import lombok.extern.log4j.Log4j2;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 import ugh.dl.ContentFile;
 import ugh.dl.DigitalDocument;
@@ -78,6 +79,7 @@ import ugh.exceptions.ReadException;
 import ugh.exceptions.TypeNotAllowedForParentException;
 import ugh.exceptions.WriteException;
 
+@Log4j2
 @PluginImplementation
 public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin {
 
@@ -140,7 +142,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
 
         } catch (Exception e) {
             Helper.setFehlerMeldung(Helper.getTranslation("exportError") + process.getTitel(), e);
-            logger.error("Export abgebrochen, xml-LeseFehler", e);
+            log.error("Export abgebrochen, xml-LeseFehler", e);
             problems.add("Export cancelled: " + e.getMessage());
             return false;
         }
@@ -185,7 +187,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
             metsDoc = parser.build(metsFilename);
         } catch (JDOMException | IOException e) {
             Helper.setFehlerMeldung("error while parsing amd file");
-            logger.error("error while parsing amd file", e);
+            log.error("error while parsing amd file", e);
             return false;
         }
 
@@ -211,7 +213,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
                     try {
                         shamd = MessageDigest.getInstance("Sha-256");
                     } catch (NoSuchAlgorithmException e) {
-                        logger.error("Algorithm not supported", e);
+                        log.error("Algorithm not supported", e);
                     }
                     try (InputStream is = StorageProvider.getInstance().newInputStream(pathToFile);
                             DigestInputStream dis = new DigestInputStream(is, shamd)) {
@@ -222,7 +224,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
                         }
                     } catch (FileNotFoundException | NoSuchFileException e) {
                         Helper.setFehlerMeldung("File not found, hash could not be calculated: " + pathToFile.toString());
-                        logger.error("File not found, hash could not be calculated: " + pathToFile.toString());
+                        log.error("File not found, hash could not be calculated: " + pathToFile.toString());
                         return false;
                     }
                     String hash = getShaString(shamd);
@@ -263,7 +265,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
             try {
                 shamd = MessageDigest.getInstance("Sha-256");
             } catch (NoSuchAlgorithmException e) {
-                logger.error("Algorithm not supported", e);
+                log.error("Algorithm not supported", e);
             }
             try (InputStream is = StorageProvider.getInstance().newInputStream(Paths.get(logFileName));
                     DigestInputStream dis = new DigestInputStream(is, shamd)) {
@@ -274,7 +276,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
                 }
             } catch (FileNotFoundException | NoSuchFileException e) {
                 Helper.setFehlerMeldung("File not found, hash could not be calculated: " + logFileName);
-                logger.error("File not found, hash could not be calculated: " + logFileName);
+                log.error("File not found, hash could not be calculated: " + logFileName);
                 return false;
             }
             String hash = getShaString(shamd);
@@ -287,7 +289,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
             outputter.output(metsDoc, output);
         } catch (IOException e) {
             Helper.setFehlerMeldung("error while writing mets file");
-            logger.error("error while writing mets file", e);
+            log.error("error while writing mets file", e);
             return false;
         }
         String manifestPath = benutzerHome.toString() + FileSystems.getDefault().getSeparator() + "submission-manifest.txt";
@@ -334,7 +336,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
             om.writeValue(new File(manifestPath), manifest);
             //            Files.write(Paths.get(manifestPath), manifest.toString().getBytes());
         } catch (IOException e) {
-            logger.error(e);
+            log.error(e);
         }
 
     }
@@ -650,7 +652,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
                     }
                 }
             } catch (IndexOutOfBoundsException | InvalidImagesException e) {
-                logger.error(e);
+                log.error(e);
                 return false;
             }
         } else {
@@ -729,7 +731,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
         } catch (DocStructHasNoTypeException | PreferencesException | WriteException | MetadataTypeNotAllowedException | ReadException
                 | TypeNotAllowedForParentException | IOException | InterruptedException | ExportFileException | UghHelperException | SwapException
                 | DAOException e) {
-            logger.error(e);
+            log.error(e);
         }
         return false;
     }
