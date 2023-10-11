@@ -304,6 +304,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
         //        StringBuilder manifest = new StringBuilder();
         SubmissionManifest manifest = new SubmissionManifest();
         manifest.setSubmissionManifestVersion(getSubmissionManifestValue(replacer, "SubmissionManifestVersion", "2.0"));
+        manifest.setSubmissionSet(getSubmissionManifestValue(replacer, "SubmissionSet", ""));
         manifest.setSubmittingOrganization(getSubmissionManifestValue(replacer, "SubmittingOrganization", ""));
         manifest.setOrganizationIdentifier(getSubmissionManifestValue(replacer, "OrganizationIdentifier", ""));
         manifest.setContractNumber(getSubmissionManifestValue(replacer, "ContractNumber", ""));

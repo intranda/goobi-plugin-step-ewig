@@ -6,13 +6,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
 @Data
-@JsonPropertyOrder({ "SubmissionManifestVersion", "SubmittingOrganization", "OrganizationIdentifier", "ContractNumber", "Contact", "ContactRole",
+@JsonPropertyOrder({ "SubmissionManifestVersion", "SubmissionSet", "SubmittingOrganization", "OrganizationIdentifier", "ContractNumber", "Contact", "ContactRole",
     "ContactEmail", "TransferCurator", "TransferCuratorEmail", "SubmissionName", "SubmissionDescription", "RightsHolder", "Rights",
     "RightsDescription", "License", "AccessRights", "DataSourceSystem", "MetadataFile", "MetadataFileFormat", "CallbackParams" })
 public class SubmissionManifest {
 
     @JsonProperty("SubmissionManifestVersion")
     private String submissionManifestVersion;
+    @JsonProperty("SubmissionSet")
+    private String submissionSet;
     @JsonProperty("SubmittingOrganization")
     private String submittingOrganization;
     @JsonProperty("OrganizationIdentifier")
