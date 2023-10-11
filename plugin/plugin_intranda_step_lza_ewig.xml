@@ -3,7 +3,6 @@
     <config>
         <project>*</project>
         <step>*</step>
-        <exportFolder>/opt/digiverso/lza/</exportFolder>
         <exportXmlLog>true</exportXmlLog>
         <createManifest>true</createManifest>
 
