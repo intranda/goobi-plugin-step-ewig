@@ -15,6 +15,7 @@
         <manifestParameter name="ContactEmail">max.mustermann@example.com</manifestParameter>
         <manifestParameter name="TransferCurator">Doe, John</manifestParameter>
         <manifestParameter name="TransferCuratorEmail">john.doe@example.com</manifestParameter>
+        <manifestParameter name="SubmissionSet">ORG_Buchdruck_2022-23</manifestParameter>
         <manifestParameter name="SubmissionName">[Abteilungskürzel]_[eindeutiger Name]</manifestParameter>
         <!-- try to get value from metadata, if this is not possible, use next parameter -->
         <manifestParameter name="SubmissionDescription">${meta.singleDigCollection};Digitalisierungsprojekt der ZLB</manifestParameter>
