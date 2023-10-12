@@ -6,7 +6,7 @@
         <exportXmlLog>true</exportXmlLog>
         <createManifest>true</createManifest>
 
-        <manifestParameter name="SubmissionManifestVersion">2.0</manifestParameter>
+        <manifestParameter name="SubmissionManifestVersion">3.0</manifestParameter>
         <manifestParameter name="SubmittingOrganization">Example organisation</manifestParameter>
         <manifestParameter name="OrganizationIdentifier">DE-1</manifestParameter>
         <manifestParameter name="ContractNumber">1234567</manifestParameter>
