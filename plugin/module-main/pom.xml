@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.intranda.goobi.plugins.step</groupId>
   <artifactId>LZA_EWIG-main</artifactId>
-  <version>24.02</version>
+  <version>24.02.1</version>
   <properties>
     <jar.name>plugin_intranda_step_LZA_EWIG</jar.name>
     <dest.folder>/opt/digiverso/goobi/plugins/step/</dest.folder>
@@ -12,7 +12,7 @@
   <parent>
     <groupId>de.intranda.goobi.plugins.step</groupId>
     <artifactId>LZA_EWIG</artifactId>
-    <version>24.02</version>
+    <version>24.02.1</version>
   </parent>
   <repositories>
     <repository>
