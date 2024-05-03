@@ -322,7 +322,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
         manifest.setAccessRights(getSubmissionManifestValue(replacer, "AccessRights", "public"));
         manifest.setDataSourceSystem(
                 getSubmissionManifestValue(replacer, "DataSourceSystem", ConfigurationHelper.getInstance().getApplicationHeaderTitle() + " - "
-                        + GoobiVersion.getPublicVersion() + " - " + GoobiVersion.getBuilddate() + " - " + GoobiVersion.getBuildversion()));
+                        + GoobiVersion.getVersion() + " - " + GoobiVersion.getBuildDate()));
         manifest.setMetadataFile(getSubmissionManifestValue(replacer, "MetadataFile", step.getProzess().getTitel() + ".xml"));
         manifest.setMetadataFileFormat(getSubmissionManifestValue(replacer, "MetadataFileFormat", "http://www.loc.gov/METS/"));
 
