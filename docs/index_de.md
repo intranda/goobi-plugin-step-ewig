@@ -3,6 +3,10 @@ title: EWIG Langzeitarchivierung
 identifier: intranda_step_lza_ewig
 published: true
 description: Dieses Step-Plugin erlaubt den Ingest von Vorgängen in das Langzeitarchiv EWIG.
+keywords:
+    - Goobi workflow
+    - Plugin
+    - Step Plugin
 ---
 ## Einführung
 Die vorliegende Dokumentation beschreibt die Installation, Konfiguration und den Einsatz eines Plugins zum Erstellen einer METS Datei für die Langzeitarchivierung EWIG. ​

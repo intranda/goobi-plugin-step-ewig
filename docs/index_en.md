@@ -3,6 +3,10 @@ title: EWIG Long term archiving
 identifier: intranda_step_lza_ewig
 published: true
 description: This step plug-in allows you to ingest processes into the EWIG long-term archive.
+keywords:
+    - Goobi workflow
+    - Plugin
+    - Step Plugin
 ---
 ## Introduction
 This documentation describes the installation, configuration and use of a plugin for creating a METS file for long-term archiving EWIG.
