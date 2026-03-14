@@ -36,9 +36,9 @@ Die Datei `plugin_intranda_step_lza_ewig.xml` muss ebenfalls für den tomcat-Nut
 ## Überblick und Funktionsweise
 Nachdem das Plugin installiert und konfiguriert wurde, kann es innerhalb eines Arbeitsschrittes genutzt werden. Dazu muss innerhalb der gewünschten Aufgabe das Plugin `intranda_step_lza_ewig` ausgewählt werden. Des Weiteren muss die Checkbox Automatische Aufgabe gesetzt sein.
 
-![Einrichgtung im Workflow](screen1.png)
+![Einrichtung im Workflow](screen1.png)
 
-Der Arbeitsschritt innerhalb von Goobi workflow exportiert alle notwendigen Dateien für den EWIG Ingest. Der Upload selbst erfolgt über den intranda TaskManager. Dies ist sinnvoll, um zu vermeiden, das mehrere parallel laufende Uploadvorgänge Konflikte mit einander haben und das System verlangsamen. Für den Upload siehe [Kapitel 4.17](https://docs.intranda.com/intranda-taskmanager-de/4/4.17-upload-von-dateien-in-das-ewig-langzeitarchiv) in der intranda TaskManager Dokumentation.
+Der Arbeitsschritt innerhalb von Goobi workflow exportiert alle notwendigen Dateien für den EWIG Ingest. Der Upload selbst erfolgt über den intranda TaskManager. Dies ist sinnvoll, um zu vermeiden, das mehrere parallel laufende Uploadvorgänge Konflikte miteinander haben und das System verlangsamen. Für den Upload siehe [Kapitel 4.17](https://docs.intranda.com/intranda-taskmanager-de/4/4.17-upload-von-dateien-in-das-ewig-langzeitarchiv) in der intranda TaskManager Dokumentation.
 
 
 ## Konfiguration
