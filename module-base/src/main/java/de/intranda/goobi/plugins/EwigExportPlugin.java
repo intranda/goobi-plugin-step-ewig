@@ -238,7 +238,7 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
         if (exportXmlLog) {
             XsltPreparatorMetadata xmlExport = new XsltPreparatorMetadata();
             String logFileName = benutzerHome.toString() + FileSystems.getDefault().getSeparator() + atsPpnBand + "_log.xml";
-            xmlExport.startExport(process, logFileName);
+            xmlExport.startLegacyExport(process, logFileName);
 
             // add new fileGroup for xml log
             Element fileGroup = new Element("fileGrp", metsNamespace);
