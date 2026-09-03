@@ -85,6 +85,11 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
 
     private static final String PLUGIN_NAME = "intranda_step_lza_ewig";
 
+    /** name of the manifest parameter holding the title of the step the callback refers to */
+    private static final String CALLBACK_STEP_PARAMETER = "callbackStep";
+    /** name of the manifest parameter holding the endpoint the callback is sent to */
+    private static final String ENDPOINT_PARAMETER = "endpoint";
+
     private String exportFolder = "/opt/digiverso/lza/";
 
     private static final Namespace metsNamespace = Namespace.getNamespace("mets", "http://www.loc.gov/METS/");
@@ -159,6 +164,17 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
             if (!mv.validate(gdzfile, prefs, process)) {
                 problems.add("Export cancelled because of validation errors");
                 problems.addAll(mv.getProblems());
+                return false;
+            }
+        }
+
+        VariableReplacer replacer = new VariableReplacer(gdzfile.getDigitalDocument(), prefs, process, step);
+
+        // the callback step is resolved before anything is written, so that a misconfiguration does not leave an incomplete package behind
+        Step callbackStep = null;
+        if (createManifest) {
+            callbackStep = resolveCallbackStep(process, replacer);
+            if (callbackStep == null) {
                 return false;
             }
         }
@@ -294,14 +310,20 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
         }
         String manifestPath = benutzerHome.toString() + FileSystems.getDefault().getSeparator() + "submission-manifest.txt";
         if (createManifest) {
-            writeSubmissionManifest(manifestPath, gdzfile);
+            writeSubmissionManifest(manifestPath, process, replacer, callbackStep);
         }
         return true;
     }
 
-    private void writeSubmissionManifest(String manifestPath, Fileformat gdzfile) throws PreferencesException {
-        VariableReplacer replacer = new VariableReplacer(gdzfile.getDigitalDocument(), prefs, step.getProzess(), step);
-        //        StringBuilder manifest = new StringBuilder();
+    /**
+     * Write the submission manifest of the package.
+     *
+     * @param manifestPath absolute path of the manifest file to write
+     * @param process process that is exported
+     * @param replacer replacer used to resolve variables within the configured manifest parameters
+     * @param callbackStep step the callback refers to, already resolved by the caller
+     */
+    private void writeSubmissionManifest(String manifestPath, Process process, VariableReplacer replacer, Step callbackStep) {
         SubmissionManifest manifest = new SubmissionManifest();
         manifest.setSubmissionManifestVersion(getSubmissionManifestValue(replacer, "SubmissionManifestVersion", "2.0"));
         manifest.setSubmissionSet(getSubmissionManifestValue(replacer, "SubmissionSet", ""));
@@ -323,19 +345,18 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
         manifest.setDataSourceSystem(
                 getSubmissionManifestValue(replacer, "DataSourceSystem", ConfigurationHelper.getInstance().getApplicationHeaderTitle() + " - "
                         + GoobiVersion.getVersion() + " - " + GoobiVersion.getBuildDate()));
-        manifest.setMetadataFile(getSubmissionManifestValue(replacer, "MetadataFile", step.getProzess().getTitel() + ".xml"));
+        manifest.setMetadataFile(getSubmissionManifestValue(replacer, "MetadataFile", process.getTitel() + ".xml"));
         manifest.setMetadataFileFormat(getSubmissionManifestValue(replacer, "MetadataFileFormat", "http://www.loc.gov/METS/"));
 
         CallbackParams param = new CallbackParams();
-        param.setEndpoint(submissionParameter.get("endpoint").get(0));
-        param.setProcessId(step.getProzess().getId());
-        param.setStepId(step.getId());
+        param.setEndpoint(getSubmissionManifestValue(replacer, ENDPOINT_PARAMETER, ""));
+        param.setProcessId(process.getId());
+        param.setStepId(callbackStep.getId());
         manifest.setCallbackParams(param);
 
         try {
             ObjectMapper om = new ObjectMapper(new YAMLFactory());
             om.writeValue(new File(manifestPath), manifest);
-            //            Files.write(Paths.get(manifestPath), manifest.toString().getBytes());
         } catch (IOException e) {
             log.error(e);
         }
@@ -364,6 +385,48 @@ public class EwigExportPlugin extends ExportMets implements IStepPlugin, IPlugin
         //        manifest.append(": ");
         //        manifest.append(defaultValue);
         //        manifest.append(System.lineSeparator());
+    }
+
+    /**
+     * Resolve the step the callback within the submission manifest refers to. The step is configured by its title as manifest parameter
+     * 'callbackStep'. A step that cannot be resolved is reported to the user, so that the caller can cancel the export.
+     *
+     * @param process process that is exported
+     * @param replacer replacer used to resolve variables within the configured title
+     * @return the configured step or null if no step with the configured title exists
+     */
+    private Step resolveCallbackStep(Process process, VariableReplacer replacer) {
+        String callbackStepTitle = getSubmissionManifestValue(replacer, CALLBACK_STEP_PARAMETER, "");
+        Step callbackStep = findStepByTitle(process.getSchritte(), callbackStepTitle);
+        if (callbackStep == null) {
+            String message =
+                    "Export cancelled: the configured callback step '" + callbackStepTitle + "' does not exist in process " + process.getTitel();
+            Helper.setFehlerMeldung(message);
+            log.error(message);
+            problems.add(message);
+        }
+        return callbackStep;
+    }
+
+    /**
+     * Find the step with the given title within the given process. The callback in the submission manifest does not refer to the export step itself,
+     * but to a step that is located later in the workflow, therefore it has to be looked up by its configured title.
+     *
+     * @param steps steps of the process to search in
+     * @param title title of the wanted step
+     * @return the first step with a matching title or null if the title is blank or no step matches
+     */
+    static Step findStepByTitle(List<Step> steps, String title) {
+        if (steps == null || StringUtils.isBlank(title)) {
+            return null;
+        }
+        String wantedTitle = title.trim();
+        for (Step currentStep : steps) {
+            if (wantedTitle.equals(currentStep.getTitel())) {
+                return currentStep;
+            }
+        }
+        return null;
     }
 
     private static String getShaString(MessageDigest messageDigest) {

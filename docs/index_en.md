@@ -90,6 +90,8 @@ name="AccessRights">${meta.AccessStatus};public</manifestParameter>
 name="MetadataFileFormat">http://www.loc.gov/METS/</manifestParameter>
         <manifestParameter
 name="endpoint">https://goobi.example.com/api/endpoint/wi</manifestParameter>
+        <manifestParameter name="callbackStep">Upload in EWIG
+abgeschlossen</manifestParameter>
     </config>
 </config_plugin>
 ```
@@ -101,5 +103,7 @@ The element `<exportFolder>` defines where in the file system the exported METS 
 With `<exportXmlLog>` you can determine whether the XML log should also be exported and written to the METS file. The log contains information about the workflow.
 
 The `<createManifest>` element controls whether a submission manifest should be created. If this is the case, the `<manifestParameter>` must also be configured.
+
+The parameter `callbackStep` contains the title of the task the callback within the submission manifest refers to. As the callback happens after the upload into the long-term archive, this is not the task this plugin is executed in, but a task located later in the workflow. If no task with this title is found, the export is cancelled with an error message.
 
 Each `<manifestParameter>` consists of two parts, the `name` attribute, which contains the name of the parameter, and the text in which the desired field contents are configured. Both static texts and all variables known in Goobi can be used. Several parameters can be specified separated by semicolons. If the first value is not known because, for example, the configured metadata has not been filled in, the next value is then tried.

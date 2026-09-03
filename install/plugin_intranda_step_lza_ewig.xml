@@ -25,6 +25,8 @@
         <manifestParameter name="License">${meta.AccessLicense};${meta.AccessStatus};https://creativecommons.org/publicdomain/mark/1.0/</manifestParameter>
         <manifestParameter name="AccessRights">${meta.AccessStatus};public</manifestParameter>
         <manifestParameter name="MetadataFileFormat">http://www.loc.gov/METS/</manifestParameter>
-	    <manifestParameter name="endpoint">https://goobi.example.com/api/endpoint/wi</manifestParameter>
+        <manifestParameter name="endpoint">https://goobi.example.com/api/endpoint/wi</manifestParameter>
+        <!-- title of the step the callback refers to, this is a step located after this export step -->
+        <manifestParameter name="callbackStep">Upload in EWIG abgeschlossen</manifestParameter>
     </config>
 </config_plugin>
